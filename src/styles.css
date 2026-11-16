@@ -31,6 +31,8 @@
   --r:5px;
   --r-lg:12px;
   --dayw:4px;
+  /* person colours (initials badges on the timeline) */
+  --p0:#2F6FBF; --p1:#B8521A; --p2:#3B7F2E; --p3:#A8367F; --p4:#1A7FA0; --p5:#C23B3B; --p6:#6B6B12; --p7:#5552C4; --p8:#8A5A3C; --p9:#C2457A; --p10:#55697B; --p11:#9A6A00; --p-ink:#FFFFFF;
   box-sizing:border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -64,6 +66,7 @@
     --ok:#6CC08C;
     --danger:#D4788C;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.45);
+    --p0:#6EA8F0; --p1:#F08A4B; --p2:#7CC46A; --p3:#E07AC4; --p4:#5FC6E6; --p5:#F07272; --p6:#C9C95A; --p7:#A3A0F5; --p8:#C99A78; --p9:#F58DB0; --p10:#9DAABA; --p11:#E6B84A; --p-ink:#0D1215;
   }
 }
 :root[data-theme="dark"]{
@@ -78,6 +81,7 @@
   --comp:#D9A75E; --comp-soft:#3A2C13;
   --hol:#333B42; --warn:#D6A94A; --warn-soft:#38300F; --ok:#6CC08C; --danger:#D4788C;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.45);
+  --p0:#6EA8F0; --p1:#F08A4B; --p2:#7CC46A; --p3:#E07AC4; --p4:#5FC6E6; --p5:#F07272; --p6:#C9C95A; --p7:#A3A0F5; --p8:#C99A78; --p9:#F58DB0; --p10:#9DAABA; --p11:#E6B84A; --p-ink:#0D1215;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{ height:100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
@@ -204,13 +208,13 @@ label.check input{ margin:3px 0 0; flex:0 0 auto; }
   display:flex; align-items:center; gap:7px; min-height:26px;
   font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.tl-row:not(.months):hover .tl-name{ background:var(--surface-2); }
+.tl-row:not(.months):not(.days):hover .tl-name{ background:var(--surface-2); }
 .tl-days{ display:flex; }
 .d{ width:var(--dayw); flex:0 0 var(--dayw); height:26px; }
 .d.we{ background:var(--surface-2); }
 .d.hol{ background:var(--hol); }
 .d.m0{ box-shadow:inset 1px 0 0 var(--line-2); }
-.d.today{ box-shadow:inset 0 0 0 1px var(--accent); }
+.d.is-today{ box-shadow:inset 0 0 0 1px var(--accent); }
 .d.vacation{ background:var(--vac) } .d.sick{ background:var(--sick) }
 .d.remote{ background:var(--remote) } .d.comp{ background:var(--comp) }
 .d.pend{ opacity:.42; }
@@ -219,6 +223,60 @@ label.check input{ margin:3px 0 0; flex:0 0 auto; }
   border-left:1px solid var(--line-2); height:20px; overflow:hidden; white-space:nowrap; }
 .tl-row.months .tl-name{ border-right:1px solid var(--line-2); font-size:12px; color:var(--ink-3); }
 .tl-sep{ height:1px; background:var(--line); }
+/* "Leaves at a glance": header, views, person badges */
+.tl{ --namew:var(--namew-full, 150px); }
+/* a focused cell scrolled into view must not end up under the sticky name column */
+.tl-wrap{ scroll-padding-inline-start:var(--namew-full, 150px); }
+.tl-hd{ flex-wrap:wrap; row-gap:8px; }
+.tl-views{ flex:0 0 auto; }
+.seg.tl-views button{ flex:0 0 auto; padding:5px 13px; font-size:13px; }
+.tl-nav{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:9px 18px; border-bottom:1px solid var(--line); }
+.tl-nav .period{ min-width:11em; text-align:center; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+.pbadge{ flex:0 0 auto; width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  font-size:9.5px; font-weight:600; letter-spacing:.02em; color:var(--p-ink); line-height:1; }
+.tl-name .nm{ overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.tl-name.me .nm{ font-weight:600; }
+.tl-name .you{ font-size:12px; color:var(--ink-3); flex:0 0 auto; }
+.tl.v-month, .tl.v-week{ width:100%; }
+.tl.v-month .tl-row, .tl.v-week .tl-row{ grid-template-columns:var(--namew) 1fr; }
+.tl.v-month .d, .tl.v-month .dh{ flex:1 1 0; width:auto; min-width:24px; }
+.tl.v-week .d, .tl.v-week .dh{ flex:1 1 0; width:auto; min-width:34px; }
+.tl.v-month .d, .tl.v-week .d{ box-shadow:inset 1px 0 0 var(--line); }
+.tl.v-month .d.w0, .tl.v-week .d.w0{ box-shadow:inset 1px 0 0 var(--line-2); }
+.tl.v-month .d.is-today, .tl.v-week .d.is-today{ box-shadow:inset 0 0 0 2px var(--accent); }
+.tl.v-week .d{ height:32px; overflow:visible; display:flex; align-items:center; }
+.tl.v-week .d.vacation{ background:var(--vac-soft); color:var(--vac); }
+.tl.v-week .d.sick{ background:var(--sick-soft); color:var(--sick); }
+.tl.v-week .d.remote{ background:var(--remote-soft); color:var(--remote); }
+.tl.v-week .d.comp{ background:var(--comp-soft); color:var(--comp); }
+.tl.v-week .d.pend{ opacity:1; outline:1px dashed currentColor; outline-offset:-2px; }
+.tl.v-week .lbl{ font-size:11.5px; font-weight:500; padding:0 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:100%; position:relative; z-index:1; flex:0 0 auto; background:inherit; margin:3px 0; }
+.tl-row.days .tl-days .dh{ font-size:11px; color:var(--ink-2); text-align:center; line-height:1.15; padding:4px 0 3px;
+  display:flex; flex-direction:column; align-items:center; white-space:nowrap; overflow:hidden; }
+.tl.v-week .tl-row.days .dh{ flex-direction:row; justify-content:center; gap:4px; padding:6px 0; font-size:12px; }
+.tl-row.days .dh b{ font-weight:600; color:var(--ink); font-size:11.5px; }
+.tl-row.days .dh.wkend{ color:var(--ink-3); }
+.tl-row.days .dh.wkend b{ color:var(--ink-3); font-weight:500; }
+.tl-row.days .dh.now b{ color:var(--accent); }
+.tl-row.days .tl-name{ border-right:1px solid var(--line-2); }
+.tl-row.days{ border-bottom:1px solid var(--line-2); }
+@media (max-width:640px){
+  .tl{ --namew:96px; }
+  .tl-wrap{ scroll-padding-inline-start:96px; }
+  .tl-name{ padding:0 6px 0 10px; gap:5px; font-size:12.5px; }
+  .tl-name .you{ display:none; }
+  .tl-nav .wk{ display:none; }
+  .tl-nav{ padding:8px 12px; }
+  .seg.tl-views button{ padding:5px 9px; }
+  .tl-nav .btn.sm.ghost{ min-width:36px; min-height:32px; }
+  .tl-nav .period{ min-width:11em; font-size:13.5px; }
+  .tl.v-week .d, .tl.v-week .dh{ min-width:30px; }
+  .tl.v-week .lbl{ font-size:10.5px; padding:0 3px; }
+}
+/* keyboard focus on a booking; after the view rules so it always shows */
+.tl .d[role="button"]:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; opacity:1; position:relative; z-index:1; }
+.tl.v-year .d[role="button"]:focus-visible{ outline-offset:1px; } /* year cells are 3–4px: draw outside */
 .legend{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:12.5px; color:var(--ink-2); }
 .legend i{ display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
 

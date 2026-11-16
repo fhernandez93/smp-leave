@@ -29,8 +29,10 @@ export function Modal({ title, children, foot }: { title: string; children: Reac
   useEffect(() => {
     // focus the first field; give focus back to whatever opened the dialog when it closes
     const opener = document.activeElement as HTMLElement | null;
-    const first = box.current?.querySelector<HTMLElement>(".bd select,.bd input,.bd textarea,.bd button") ?? box.current?.querySelector<HTMLElement>(".ft .btn.primary,.ft .btn.danger");
-    const t = setTimeout(() => first?.focus(), 30);
+    const first = box.current?.querySelector<HTMLElement>(".bd select,.bd input,.bd textarea,.bd button") ?? box.current?.querySelector<HTMLElement>(".ft .btn.primary,.ft .btn.danger")
+      ?? box.current?.querySelector<HTMLElement>(".ft .btn,.hd button");
+    // don't steal focus from a field the person (or a test) already moved into
+    const t = setTimeout(() => { if (!box.current?.contains(document.activeElement)) first?.focus(); }, 30);
     return () => {
       clearTimeout(t);
       if (opener && document.contains(opener)) opener.focus();

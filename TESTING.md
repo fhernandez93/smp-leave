@@ -2,7 +2,8 @@
 
 ## What runs
 
-- **Unit (Vitest, `test/unit`)**: Easter and the Fribourg calendar (2024–2028, half
+- **Unit (Vitest, `test/unit`)**: ISO weeks and which week a month shows; per-person colour
+  slots (distinct, stable when people join or leave); Easter and the Fribourg calendar (2024–2028, half
   days, published year-end table, custom closures); working-day counting (weekends,
   holidays, half-day caps, cross-year); identity bindings (pinned, uncontested,
   contested); effective status (auto-approval on contiguous runs, decisions,
@@ -28,6 +29,10 @@
     bank, CSV export layout, archiving a year, read-only viewer, page outside claude.ai.
   - The page loads with every network request blocked except Google Fonts.
   - At most 8 live subscriptions after visiting every tab.
+  - "Leaves at a glance": Year / Month / Week views and their arrows (across New Year, into and
+    out of an archived year), Today, the month shared with the Calendar tab, the remembered view,
+    half-day and pending cells, one tab stop per booking (Enter / Space), scroll-to-today on a
+    phone, distinct per-person badge colours that every viewer sees alike.
   - **Parity oracle**: the real v1 page and v2 render identical Balances, Overtime
     and Days-off tables from the same data (v1 documents vs. their migration), for
     2026 and 2027.

@@ -76,6 +76,7 @@ test("overtime: logged, approved, banked, then spent as time off in lieu", async
   const dlg = alice.getByRole("dialog", { name: "Log overtime" });
   await dlg.locator("#ot-date").fill("2026-02-28");
   await dlg.locator("#ot-hours").fill("8.4");
+  await expect(dlg.locator("#ot-hours")).toHaveValue("8.4");
   await dlg.getByRole("button", { name: "Send for approval" }).click();
   const boss = await openAs(context, "boss");
   await ready(boss);

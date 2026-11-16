@@ -126,19 +126,21 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
   );
 }
 
-export function Legend({ pendingNote }: { pendingNote: "faded" | "dashed" }) {
+export function Legend({ pendingNote, closures = pendingNote === "faded" }: { pendingNote: "faded" | "dashed"; closures?: boolean }) {
   return (
     <div className="legend">
       <span><i style={{ background: "var(--vac)" }} />Vacation</span>
       <span><i style={{ background: "var(--comp)" }} />Time off in lieu</span>
       <span><i style={{ background: "var(--sick)" }} />Sick</span>
       <span><i style={{ background: "var(--remote)" }} />Remote</span>
-      {pendingNote === "faded" ? (
+      {closures && (
         <>
           <span><i style={{ background: "var(--hol)" }} />Office closed</span>
           <span><i style={{ background: "linear-gradient(to bottom,var(--surface-2) 50%,var(--hol) 50%)" }} />Half day off</span>
-          <span><i style={{ background: "var(--vac)", opacity: 0.42 }} />Awaiting approval</span>
         </>
+      )}
+      {pendingNote === "faded" ? (
+        <span><i style={{ background: "var(--vac)", opacity: 0.42 }} />Awaiting approval</span>
       ) : (
         <span className="dim">Dashed outline means it still needs an approver.</span>
       )}

@@ -9,7 +9,8 @@ import { Modal } from "./ModalHost";
 
 export function RequestDetail({ uid }: { uid: string }) {
   const [s, d] = useApp();
-  const r = [...d.model.records, ...recordsForYear(s.year)].find((x): x is LeaveRecord => x.uid === uid && x.kind === "leave");
+  // the week view can show late December of an archived year while s.year is already the next one
+  const r = [...d.model.records, ...recordsForYear(s.year), ...[...s.archived.values()].flat()].find((x): x is LeaveRecord => x.uid === uid && x.kind === "leave");
   if (!r) return <Modal title="Leave details"><p className="muted small">This booking is no longer here.</p></Modal>;
   const days = totalDays(d.cal, r);
   const mine = r.memberId === d.memberId;

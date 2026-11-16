@@ -7,6 +7,8 @@ import type { ArchiveSummary } from "../platform/parse";
 import type { Downloads, Profile, Runtime, User, DB } from "../platform/runtime";
 import { pref } from "./prefs";
 
+export type TlView = "year" | "month" | "week";
+export const TL_VIEWS: TlView[] = ["year", "month", "week"];
 export type Tab = "timeline" | "calendar" | "requests" | "balances" | "team" | "settings";
 export const TABS: { id: Tab; label: string }[] = [
   { id: "timeline", label: "Timeline" },
@@ -68,10 +70,26 @@ export interface State {
   tab: Tab;
   year: number;
   calMonth: number;
+  /** "Leaves at a glance" view */
+  tlView: TlView;
+  /** Monday of the week shown in the week view (kept in step with year/calMonth) */
+  tlWeek: string | null;
   reqFilter: ReqFilter;
   toasts: Toast[];
   modal: ModalSpec | null;
   busy: boolean;
+}
+
+function initialTlView(): TlView {
+  const v = pref("tlView");
+  if (TL_VIEWS.some((x) => x === v)) return v as TlView;
+  // a whole year is ~1100px wide; phones start on the month
+  try {
+    if (typeof matchMedia === "function" && matchMedia("(max-width: 640px)").matches) return "month";
+  } catch {
+    /* no media queries: fall through */
+  }
+  return "year";
 }
 
 function initialTab(): Tab {
@@ -94,6 +112,8 @@ export function initialState(now = new Date()): State {
     tab: initialTab(),
     year: Number(pref("year")) || now.getFullYear(),
     calMonth: now.getMonth(),
+    tlView: initialTlView(),
+    tlWeek: null,
     reqFilter: "all",
     toasts: [],
     modal: null,

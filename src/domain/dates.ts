@@ -100,3 +100,52 @@ export function easter(y: number): Date {
 export function overlaps(a: { start: ISODate; end: ISODate }, b: { start: ISODate; end: ISODate }): boolean {
   return a.start <= b.end && b.start <= a.end;
 }
+
+/* ---------- weeks (Monday-first; a week belongs to the month of its Thursday, as ISO 8601) ---------- */
+
+/** The Monday of the week containing `s`. */
+export function mondayOf(s: ISODate): ISODate {
+  const d = parseISO(s);
+  return iso(addDays(d, -mondayIndex(d)));
+}
+
+/** The Thursday of the week starting on `monday`: it decides the week's month and year. */
+export function thursdayOf(monday: ISODate): Date {
+  return addDays(parseISO(mondayOf(monday)), 3);
+}
+
+/** ISO 8601 week number. */
+export function isoWeek(s: ISODate): number {
+  const thu = thursdayOf(mondayOf(s));
+  const jan1 = Date.UTC(thu.getUTCFullYear(), 0, 1);
+  return Math.floor((thu.getTime() - jan1) / DAYMS / 7) + 1;
+}
+
+/** Does the week starting on `monday` belong to month `m` (0-based) of year `y`? */
+export function weekInMonth(monday: ISODate, y: number, m: number): boolean {
+  const t = thursdayOf(monday);
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m;
+}
+
+/**
+ * The week to show for a month: the remembered week if it belongs to that month,
+ * else today's week if today is in that month (so "today" is always on screen,
+ * even on the 1st of a month whose first days belong to the previous month's last week),
+ * else the month's first week.
+ */
+export function weekForMonth(y: number, m: number, today: ISODate, remembered: ISODate | null): ISODate {
+  if (remembered && weekInMonth(remembered, y, m)) return mondayOf(remembered);
+  const t = parseISO(today);
+  if (t.getUTCFullYear() === y && t.getUTCMonth() === m) return mondayOf(today);
+  const first = new Date(Date.UTC(y, m, 1));
+  const firstThu = addDays(first, (3 - mondayIndex(first) + 7) % 7);
+  return iso(addDays(firstThu, -3));
+}
+
+/** Every date from `a` to `b` inclusive. */
+export function datesBetween(a: ISODate, b: ISODate): ISODate[] {
+  const out: ISODate[] = [];
+  const end = parseISO(b).getTime();
+  for (let d = parseISO(a); d.getTime() <= end && out.length < 400; d = addDays(d, 1)) out.push(iso(d));
+  return out;
+}

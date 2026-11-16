@@ -5,14 +5,14 @@
  */
 import { DEFAULT_SETTINGS, HOLIDAY_VERSION } from "../domain/calendar";
 import { countedDays, totalDays } from "../domain/counting";
-import { yearOf } from "../domain/dates";
+import { mondayOf, thursdayOf, yearOf } from "../domain/dates";
 import { fingerprint, recordSnapshot, sealsNeeded, type LeaveOrOvertime, type LeaveRecord, type OvertimeRecord } from "../domain/model";
 import type { Decision, DecisionStatus, Entry, LeaveType, Member, Settings } from "../domain/types";
 import { decisionBody, entryBody } from "../platform/migrate";
 import { errorCode, type DocRef } from "../platform/runtime";
 import { parseLedger } from "../platform/parse";
 import { setPref } from "./prefs";
-import { derive, store, type ModalSpec, type ReqFilter, type Tab } from "./store";
+import { derive, store, type ModalSpec, type ReqFilter, type State, type Tab, type TlView } from "./store";
 
 export const NOTE_MAX = 500;
 /** Refuse writes that would push a document near the platform's 256 KiB cap. */
@@ -90,6 +90,13 @@ export async function write(fn: () => Promise<unknown>, okMsg?: string, opts: { 
 /* ------------------------------------------------------------------ */
 export function setTab(tab: Tab): void { store.set({ tab }); setPref("tab", tab); }
 export function setYear(year: number): void { store.set({ year }); setPref("year", String(year)); void loadArchivedYear(year); }
+export function setTlView(tlView: TlView): void { store.set({ tlView }); setPref("tlView", tlView); }
+/** Show the week starting `monday`; year and month follow the week's Thursday. */
+export function setTlWeek(monday: string): void {
+  const thu = thursdayOf(monday);
+  setCalMonth(thu.getUTCFullYear(), thu.getUTCMonth());
+  store.set({ tlWeek: mondayOf(monday) });
+}
 export function setCalMonth(year: number, calMonth: number): void { store.set({ year, calMonth }); setPref("year", String(year)); void loadArchivedYear(year); }
 export function setFilter(reqFilter: ReqFilter): void { store.set({ reqFilter }); }
 export function openModal(modal: ModalSpec): void { store.set({ modal }); }
@@ -583,28 +590,40 @@ async function finishInterruptedArchive(): Promise<void> {
   }
 }
 
+/** archive years being fetched right now, so overlapping calls don't fetch (or fail) twice */
+const archiveLoading = new Map<number, Promise<void>>();
+
 /** Load the archived records a past year's views need (that year and the next, for leave crossing New Year). */
 export async function loadArchivedYear(year: number): Promise<void> {
   const s = store.get();
   const before = s.settings.archivedBefore;
   if (!s.db || before == null || year >= before) return;
   const want = [year, year + 1].filter((y) => y < before && !store.get().archived.has(y));
-  for (const y of want) {
-    try {
-      const q = await s.db.collection(`archive/${y}/ledgers`).limit(1000).get();
-      const recs: LeaveOrOvertime[] = [];
-      for (const doc of q.docs) {
-        const raw = doc.data();
-        if (!raw || !Array.isArray(raw.records)) continue;
-        for (const x of raw.records as Record<string, unknown>[]) {
-          const r = fromArchive(doc.id, x);
-          if (r) recs.push(r);
-        }
-      }
-      store.set((st) => ({ archived: new Map(st.archived).set(y, recs) }));
-    } catch {
-      toast(`Couldn’t load the archived records for ${y}.`, true);
+  await Promise.all(want.map((y) => {
+    let p = archiveLoading.get(y);
+    if (!p) {
+      p = loadArchiveYearOnce(s.db!, y).finally(() => archiveLoading.delete(y));
+      archiveLoading.set(y, p);
     }
+    return p;
+  }));
+}
+
+async function loadArchiveYearOnce(db: NonNullable<State["db"]>, y: number): Promise<void> {
+  try {
+    const q = await db.collection(`archive/${y}/ledgers`).limit(1000).get();
+    const recs: LeaveOrOvertime[] = [];
+    for (const doc of q.docs) {
+      const raw = doc.data();
+      if (!raw || !Array.isArray(raw.records)) continue;
+      for (const x of raw.records as Record<string, unknown>[]) {
+        const r = fromArchive(doc.id, x);
+        if (r) recs.push(r);
+      }
+    }
+    store.set((st) => ({ archived: new Map(st.archived).set(y, recs) }));
+  } catch {
+    toast(`Couldn’t load the archived records for ${y}.`, true);
   }
 }
 
