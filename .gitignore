@@ -1,0 +1,11 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.local
+# never commit exported team data
+backup/
+*.csv
+
+# local Claude Code session files
+.claude/

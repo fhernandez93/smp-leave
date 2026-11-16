@@ -1,0 +1,2521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SMP Physics Team — Leave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  color-scheme: light;
+  --paper:#F5F7F4;
+  --surface:#FFFFFF;
+  --surface-2:#ECEFEA;
+  --surface-3:#E2E6DF;
+  --ink:#191E22;
+  --ink-2:#555D64;
+  --ink-3:#848C92;
+  --line:#DBE0D9;
+  --line-2:#C5CCC3;
+  --accent:#24405C;
+  --accent-2:#30587E;
+  --on-accent:#FFFFFF;
+  --vac:#2F8F83;
+  --vac-soft:#D5EBE6;
+  --sick:#9B3F55;
+  --sick-soft:#F2DCE1;
+  --remote:#6559A3;
+  --remote-soft:#E2DEF2;
+  --comp:#97661F;
+  --comp-soft:#F3E6CF;
+  --hol:#C8CFC6;
+  --warn:#8A6516;
+  --warn-soft:#F5E8CC;
+  --ok:#2F6B46;
+  --danger:#9B3F55;
+  --shadow:0 1px 2px rgba(25,30,34,.06), 0 8px 24px rgba(25,30,34,.07);
+  --r:5px;
+  --r-lg:12px;
+  --dayw:4px;
+  box-sizing:border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --paper:#111518;
+    --surface:#171C20;
+    --surface-2:#1F252A;
+    --surface-3:#272E34;
+    --ink:#E4E9E5;
+    --ink-2:#A2ABAD;
+    --ink-3:#737C81;
+    --line:#2A3238;
+    --line-2:#3A434A;
+    --accent:#8EB4DA;
+    --accent-2:#A6C6E6;
+    --on-accent:#0D1215;
+    --vac:#4FB8A8;
+    --vac-soft:#1B3B38;
+    --sick:#D4788C;
+    --sick-soft:#3B2027;
+    --remote:#9C8FD8;
+    --remote-soft:#272348;
+    --comp:#D9A75E;
+    --comp-soft:#3A2C13;
+    --hol:#333B42;
+    --warn:#D6A94A;
+    --warn-soft:#38300F;
+    --ok:#6CC08C;
+    --danger:#D4788C;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#111518; --surface:#171C20; --surface-2:#1F252A; --surface-3:#272E34;
+  --ink:#E4E9E5; --ink-2:#A2ABAD; --ink-3:#737C81;
+  --line:#2A3238; --line-2:#3A434A;
+  --accent:#8EB4DA; --accent-2:#A6C6E6; --on-accent:#0D1215;
+  --vac:#4FB8A8; --vac-soft:#1B3B38;
+  --sick:#D4788C; --sick-soft:#3B2027;
+  --remote:#9C8FD8; --remote-soft:#272348;
+  --comp:#D9A75E; --comp-soft:#3A2C13;
+  --hol:#333B42; --warn:#D6A94A; --warn-soft:#38300F; --ok:#6CC08C; --danger:#D4788C;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.45);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{ height:100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body{
+  margin:0; min-height:100%;
+  background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top, 0px);
+  background:var(--surface); z-index:40;
+}
+.num{ font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+h1,h2,h3{ margin:0; font-weight:600; letter-spacing:-.012em; }
+button{ font:inherit; color:inherit; }
+a{ color:var(--accent); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:3px; }
+@media (prefers-reduced-motion: reduce){ *{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+
+/* ---------- chrome ---------- */
+header.top{
+  position:sticky; top:env(safe-area-inset-top, 0px); z-index:30;
+  background:var(--surface); border-bottom:1px solid var(--line);
+}
+.top-in{ max-width:1180px; margin:0 auto; padding:11px 20px 0; }
+.brand{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.brand h1{ font-size:17px; }
+.brand .sub{ color:var(--ink-3); font-size:13px; }
+.brand .spacer{ flex:1 1 auto; }
+nav.tabs{ display:flex; gap:2px; margin-top:10px; overflow-x:auto; scrollbar-width:none; }
+nav.tabs::-webkit-scrollbar{ display:none }
+nav.tabs button{
+  background:none; border:0; border-bottom:2px solid transparent;
+  padding:8px 11px 9px; cursor:pointer; color:var(--ink-2); white-space:nowrap;
+  font-size:14px; font-weight:450;
+}
+nav.tabs button[aria-current="true"]{ color:var(--ink); border-bottom-color:var(--accent); font-weight:600; }
+nav.tabs button .badge{
+  display:inline-block; margin-left:6px; min-width:17px; padding:0 5px;
+  background:var(--warn-soft); color:var(--warn); border-radius:9px;
+  font-size:11px; font-weight:600; line-height:17px; text-align:center;
+}
+main{ max-width:1180px; margin:0 auto; padding:22px 20px 80px; }
+.section-head{ display:flex; align-items:center; gap:12px; margin:0 0 12px; flex-wrap:wrap; }
+.section-head h2{ font-size:15px; font-weight:600; }
+.section-head .spacer{ flex:1 1 auto; }
+.muted{ color:var(--ink-2); }
+.dim{ color:var(--ink-3); }
+.small{ font-size:13px; }
+.tiny{ font-size:12px; }
+
+/* ---------- controls ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:7px; justify-content:center;
+  padding:7px 13px; border-radius:var(--r); border:1px solid var(--line-2);
+  background:var(--surface); cursor:pointer; font-size:14px; font-weight:500;
+  transition:background .12s ease, border-color .12s ease;
+}
+.btn:hover:not(:disabled){ background:var(--surface-2); }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btn.primary{ background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+.btn.primary:hover:not(:disabled){ background:var(--accent-2); border-color:var(--accent-2); }
+.btn.ghost{ border-color:transparent; background:transparent; }
+.btn.ghost:hover:not(:disabled){ background:var(--surface-2); }
+.btn.sm{ padding:4px 9px; font-size:13px; }
+.btn.danger{ color:var(--danger); border-color:var(--line-2); }
+select,input[type=text],input[type=date],input[type=number],textarea{
+  font:inherit; color:var(--ink); background:var(--surface);
+  border:1px solid var(--line-2); border-radius:var(--r); padding:7px 9px; width:100%;
+}
+input[type=date],input[type=number]{ font-family:"IBM Plex Mono", monospace; font-size:14px; }
+textarea{ resize:vertical; min-height:62px; }
+label.field{ display:block; margin-bottom:12px; }
+label.field > span{ display:block; font-size:13px; color:var(--ink-2); margin-bottom:4px; }
+label.check{ display:flex; gap:8px; align-items:flex-start; font-size:14px; margin-bottom:8px; cursor:pointer; }
+label.check input{ margin:3px 0 0; flex:0 0 auto; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:560px){ .row2{ grid-template-columns:1fr; } }
+
+/* ---------- surfaces ---------- */
+.panel{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); }
+.panel + .panel{ margin-top:18px; }
+.panel .pad{ padding:16px 18px; }
+.panel .hd{ padding:13px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; }
+.panel .hd h2{ font-size:14px; }
+.panel .hd .spacer{ flex:1 1 auto; }
+.empty{ padding:30px 18px; text-align:center; color:var(--ink-2); font-size:14px; }
+.empty strong{ display:block; color:var(--ink); font-size:15px; margin-bottom:4px; font-weight:600; }
+
+/* ---------- type chips ---------- */
+.chip{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:500;
+  padding:2px 8px; border-radius:20px; border:1px solid transparent; white-space:nowrap; }
+.chip .dot{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
+.chip.vacation{ background:var(--vac-soft); color:var(--vac); }
+.chip.sick{ background:var(--sick-soft); color:var(--sick); }
+.chip.remote{ background:var(--remote-soft); color:var(--remote); }
+.chip.comp{ background:var(--comp-soft); color:var(--comp); }
+.chip.overtime{ background:var(--comp-soft); color:var(--comp); }
+.chip.pending{ background:var(--warn-soft); color:var(--warn); }
+.chip.approved{ background:transparent; color:var(--ok); border-color:currentColor; }
+.chip.rejected,.chip.cancelled{ background:var(--surface-2); color:var(--ink-3); }
+.chip.vacation .dot{ background:var(--vac) } .chip.sick .dot{ background:var(--sick) }
+.chip.remote .dot{ background:var(--remote) }
+.chip.comp .dot{ background:var(--comp) } .chip.overtime .dot{ background:var(--comp) }
+
+/* ---------- today strip ---------- */
+.today{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px;
+  background:var(--line); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; }
+.today > div{ background:var(--surface); padding:14px 16px; }
+.today .k{ font-size:13px; color:var(--ink-2); margin-bottom:6px; }
+.today .v{ font-size:22px; font-weight:600; letter-spacing:-.02em; }
+.today .v small{ font-size:13px; font-weight:450; color:var(--ink-3); margin-left:4px; letter-spacing:0; }
+.people{ display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+
+/* ---------- timeline ---------- */
+.tl-wrap{ overflow-x:auto; overflow-y:visible; }
+.tl{ min-width:max-content; }
+.tl-row{ display:grid; grid-template-columns:var(--namew) max-content; align-items:stretch; }
+.tl-name{
+  position:sticky; left:0; z-index:2; background:var(--surface);
+  border-right:1px solid var(--line-2); padding:0 10px 0 16px;
+  display:flex; align-items:center; gap:7px; min-height:26px;
+  font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.tl-row:not(.months):hover .tl-name{ background:var(--surface-2); }
+.tl-days{ display:flex; }
+.d{ width:var(--dayw); flex:0 0 var(--dayw); height:26px; }
+.d.we{ background:var(--surface-2); }
+.d.hol{ background:var(--hol); }
+.d.m0{ box-shadow:inset 1px 0 0 var(--line-2); }
+.d.today{ box-shadow:inset 0 0 0 1px var(--accent); }
+.d.vacation{ background:var(--vac) } .d.sick{ background:var(--sick) }
+.d.remote{ background:var(--remote) } .d.comp{ background:var(--comp) }
+.d.pend{ opacity:.42; }
+.d.half{ background-size:100% 100%; }
+.tl-row.months .tl-days .mo{ flex:0 0 auto; font-size:11px; color:var(--ink-2); padding-left:3px;
+  border-left:1px solid var(--line-2); height:20px; overflow:hidden; white-space:nowrap; }
+.tl-row.months .tl-name{ border-right:1px solid var(--line-2); font-size:12px; color:var(--ink-3); }
+.tl-sep{ height:1px; background:var(--line); }
+.legend{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:12.5px; color:var(--ink-2); }
+.legend i{ display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+
+/* ---------- month calendar ---------- */
+.cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line); border-top:1px solid var(--line); }
+.cal .dow{ background:var(--surface-2); padding:6px 8px; font-size:12px; color:var(--ink-2); text-align:center; }
+.cell{ background:var(--surface); min-height:94px; padding:5px 6px; }
+.cell.out{ background:var(--surface-2); opacity:.55; }
+.cell.we{ background:var(--surface-2); }
+.cell.holiday{ background:var(--surface-2); }
+.cell .n{ font-size:12.5px; color:var(--ink-2); display:flex; align-items:center; gap:5px; }
+.cell .n b{ font-weight:600; color:var(--ink); }
+.cell.istoday .n b{ background:var(--accent); color:var(--on-accent); border-radius:50%;
+  width:19px; height:19px; display:inline-flex; align-items:center; justify-content:center; font-size:11.5px; }
+.cell .holname{ font-size:11px; color:var(--ink-3); margin-top:2px; line-height:1.25; }
+.cell ul{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:2px; }
+.cell li{ font-size:11.5px; padding:1px 5px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cell li.vacation{ background:var(--vac-soft); color:var(--vac); }
+.cell li.sick{ background:var(--sick-soft); color:var(--sick); }
+.cell li.remote{ background:var(--remote-soft); color:var(--remote); }
+.cell li.comp{ background:var(--comp-soft); color:var(--comp); }
+.cell li.pend{ outline:1px dashed currentColor; outline-offset:-1px; }
+@media (max-width:640px){ .cell{ min-height:70px; } .cell li{ font-size:10.5px; } :root{ --dayw:3px; } }
+
+/* ---------- tables ---------- */
+table{ width:100%; border-collapse:collapse; font-size:14px; }
+th{ text-align:left; font-weight:500; font-size:12.5px; color:var(--ink-2);
+  padding:8px 12px; border-bottom:1px solid var(--line); background:var(--surface-2); }
+td{ padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+tr:last-child td{ border-bottom:0; }
+td.r,th.r{ text-align:right; }
+.bar{ height:5px; border-radius:3px; background:var(--surface-3); overflow:hidden; display:flex; margin-top:5px; min-width:90px; }
+.bar i{ display:block; height:100%; }
+.bar i.used{ background:var(--vac); } .bar i.pend{ background:var(--vac); opacity:.4; }
+.scroll-x{ overflow-x:auto; }
+
+/* ---------- request list ---------- */
+.req{ display:flex; gap:12px; align-items:flex-start; padding:12px 18px; border-bottom:1px solid var(--line); }
+.req:last-child{ border-bottom:0; }
+.req .who{ font-weight:500; }
+.req .meta{ font-size:13px; color:var(--ink-2); margin-top:2px; }
+.req .acts{ margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+.req .body{ min-width:0; }
+.req .note{ font-size:13px; color:var(--ink-2); margin-top:5px; font-style:italic;
+  border-left:2px solid var(--line-2); padding-left:9px; }
+
+/* ---------- modal ---------- */
+.scrim{ position:fixed; inset:0; background:rgba(16,20,23,.45); z-index:60;
+  display:flex; align-items:flex-start; justify-content:center; padding:5vh 16px 16px; overflow-y:auto; }
+.modal{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  width:100%; max-width:470px; box-shadow:var(--shadow); }
+.modal .hd{ padding:15px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; }
+.modal .hd h2{ font-size:15px; }
+.modal .bd{ padding:16px 18px; }
+.modal .ft{ padding:13px 18px; border-top:1px solid var(--line); display:flex; gap:9px; justify-content:flex-end; align-items:center; }
+.modal .ft .spacer{ flex:1 1 auto; }
+.calc{ background:var(--surface-2); border-radius:var(--r); padding:10px 12px; font-size:13.5px; margin:4px 0 14px; }
+.calc b{ font-family:"IBM Plex Mono",monospace; font-weight:600; }
+.calc .warn{ color:var(--warn); margin-top:5px; display:block; font-size:12.5px; }
+.calc .bad{ color:var(--danger); margin-top:5px; display:block; font-size:12.5px; }
+.seg{ display:flex; gap:0; border:1px solid var(--line-2); border-radius:var(--r); overflow:hidden; }
+.seg button{ flex:1; background:var(--surface); border:0; padding:7px 6px; cursor:pointer; font-size:13.5px;
+  border-right:1px solid var(--line-2); }
+.seg button:last-child{ border-right:0 }
+.seg button{ min-width:0; }
+.seg button[aria-pressed="true"]{ background:var(--accent); color:var(--on-accent); font-weight:500; }
+
+/* ---------- toast ---------- */
+#toasts{ position:fixed; left:50%; transform:translateX(-50%); z-index:90;
+  bottom:calc(18px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:8px; align-items:center; }
+.toast{ background:var(--ink); color:var(--paper); padding:9px 15px; border-radius:20px;
+  font-size:13.5px; box-shadow:var(--shadow); max-width:88vw; }
+.toast.bad{ background:var(--danger); color:#fff; }
+
+/* ---------- member editor ---------- */
+.mlist{ display:flex; flex-direction:column; }
+.mrow{ display:flex; gap:10px; align-items:center; padding:10px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.mrow:last-child{ border-bottom:0 }
+.mrow .nm{ flex:1 1 150px; min-width:0; }
+.mrow .ent{ width:92px; flex:0 0 auto; }
+.pill{ font-size:11.5px; padding:1px 7px; border-radius:20px; background:var(--surface-2); color:var(--ink-2); }
+.pill.mgr{ background:var(--accent); color:var(--on-accent); }
+.hol-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(245px,1fr)); gap:2px 18px; }
+.hol-grid label.check{ align-items:center; }
+.cell .n .halfmark{ margin-left:auto; font-size:11px; color:var(--ink-3); }
+h3.small{ font-size:13px; font-weight:600; }
+.cell.holiday.half{ background:linear-gradient(to bottom, var(--surface) 55%, var(--surface-2) 55%); }
+.gate{ max-width:440px; margin:12vh auto; text-align:center; padding:0 20px; }
+.gate h2{ font-size:17px; margin-bottom:8px; }
+.gate p{ color:var(--ink-2); font-size:14px; }
+.setup{ max-width:560px; margin:0 auto; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1 id="teamName">SMP Physics Team</h1>
+      <span class="sub" id="subtitle">Leave and absence</span>
+      <span class="spacer"></span>
+      <span class="sub num" id="whoami"></span>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  </div>
+</header>
+<main id="view"><div class="empty">Loading the team’s leave data…</div></main>
+<div id="toasts" aria-live="polite"></div>
+<div id="modalHost"></div>
+<script>
+/* ============================================================
+   SMP Physics Team — leave and absence
+   ============================================================ */
+"use strict";
+
+/* ---------- tiny DOM helper (text-only, injection-safe) ---------- */
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : String(v));
+  }
+  for (const kid of kids.flat(3)) {
+    if (kid == null || kid === false || kid === "") continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const $ = (sel) => document.querySelector(sel);
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+/* ---------- local prefs (per-viewer convenience only) ---------- */
+function pref(key, val) {
+  try {
+    if (val === undefined) return localStorage.getItem("smpleave:" + key);
+    localStorage.setItem("smpleave:" + key, val);
+  } catch (e) { /* storage unavailable — never fatal */ }
+  return null;
+}
+
+/* ---------- toasts ---------- */
+function toast(msg, bad) {
+  const t = h("div", { class: "toast" + (bad ? " bad" : ""), text: msg });
+  $("#toasts").append(t);
+  setTimeout(() => t.remove(), bad ? 5200 : 3200);
+}
+
+/* ---------- dates (all UTC, all ISO yyyy-mm-dd) ---------- */
+const DAYMS = 86400000;
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+function iso(d) { return d.toISOString().slice(0, 10); }
+function parseISO(s) { const p = String(s).split("-").map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2])); }
+function addDays(d, n) { return new Date(d.getTime() + n * DAYMS); }
+function todayISO() { const n = new Date(); return iso(new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()))); }
+function yearOf(s) { return Number(String(s).slice(0, 4)); }
+function fmtDate(s) { const d = parseISO(s); return d.getUTCDate() + " " + MON3[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
+function fmtShort(s) { const d = parseISO(s); return d.getUTCDate() + " " + MON3[d.getUTCMonth()]; }
+function fmtRange(a, b) { return a === b ? fmtDate(a) : (yearOf(a) === yearOf(b) ? fmtShort(a) + " – " + fmtDate(b) : fmtDate(a) + " – " + fmtDate(b)); }
+function daysInMonth(y, m) { return new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); }
+function isLeap(y) { return daysInMonth(y, 1) === 29; }
+/** 0 = Monday … 6 = Sunday */
+function mondayIndex(d) { return (d.getUTCDay() + 6) % 7; }
+function num(n) { return Number(n).toFixed(1).replace(/\.0$/, ""); }
+function plural(n, one, many) { return num(n) + " " + (Math.abs(n) === 1 ? one : many); }
+
+/** Easter Sunday (Meeus/Jones/Butcher, Gregorian). */
+function easter(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100;
+  const d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const hh = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - hh - k) % 7;
+  const m = Math.floor((a + 11 * hh + 22 * l) / 451);
+  const mo = Math.floor((hh + l - 7 * m + 114) / 31);
+  const da = ((hh + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(y, mo - 1, da));
+}
+
+/* The calendar published for State of Fribourg employees by the Amt für
+   Personal und Organisation (www.fr.ch). "Gesetzliche Feiertage" are fixed
+   in law; "dienstfreie Tage" are granted on top of them, and the year-end
+   ones are decided afresh every year — so only the years the State has
+   actually published are authoritative here. */
+const HOLIDAY_DEFS = [
+  { key: "newyear",       kind: "legal",   name: "New Year’s Day",        de: "Neujahrstag",       fixed: [1, 1] },
+  { key: "goodfriday",    kind: "legal",   name: "Good Friday",           de: "Karfreitag",        easter: -2 },
+  { key: "ascension",     kind: "legal",   name: "Ascension",             de: "Auffahrt",          easter: 39 },
+  { key: "corpuschristi", kind: "legal",   name: "Corpus Christi",        de: "Fronleichnam",      easter: 60 },
+  { key: "nationalday",   kind: "legal",   name: "Swiss National Day",    de: "Bundesfeiertag",    fixed: [8, 1] },
+  { key: "assumption",    kind: "legal",   name: "Assumption",            de: "Mariä Himmelfahrt", fixed: [8, 15] },
+  { key: "allsaints",     kind: "legal",   name: "All Saints",            de: "Allerheiligen",     fixed: [11, 1] },
+  { key: "immaculate",    kind: "legal",   name: "Immaculate Conception", de: "Mariä Empfängnis",  fixed: [12, 8] },
+  { key: "christmas",     kind: "legal",   name: "Christmas Day",         de: "Weihnachten",       fixed: [12, 25] },
+  { key: "berchtold",     kind: "service", name: "Berchtold’s Day",       de: "Berchtoldstag",     fixed: [1, 2] },
+  { key: "eastermonday",  kind: "service", name: "Easter Monday",         de: "Ostermontag",       easter: 1 },
+  { key: "labour",        kind: "service", name: "Labour Day",            de: "Tag der Arbeit",    fixed: [5, 1], fraction: 0.5, period: "pm" },
+  { key: "whitmonday",    kind: "service", name: "Whit Monday",           de: "Pfingstmontag",     easter: 50 },
+  { key: "dec24",         kind: "service", name: "Christmas Eve",         de: "24. Dezember",      fixed: [12, 24], yearly: true, period: "pm" },
+  { key: "ststephen",     kind: "service", name: "St Stephen’s Day",      de: "Stephanstag",       fixed: [12, 26] },
+  { key: "dec31",         kind: "service", name: "New Year’s Eve",        de: "31. Dezember",      fixed: [12, 31], yearly: true, period: "pm" }
+];
+/* 24 and 31 December, exactly as the State published them. */
+const YEAR_END = { 2026: { dec24: 0.5, dec31: 0 }, 2027: { dec24: 1, dec31: 1 } };
+const YEAR_END_FALLBACK = { dec24: 0.5, dec31: 0 };
+const PUBLISHED_YEARS = Object.keys(YEAR_END).map(Number);
+const DEFAULT_HOLIDAYS = HOLIDAY_DEFS.map(d => d.key);
+
+const DEFAULTS = {
+  teamName: "SMP Physics Team",
+  defaultDays: 25,
+  workdays: [1, 2, 3, 4, 5],          // JS getUTCDay(): 1 = Monday
+  approvalThreshold: 2,                // more than this many days needs a manager
+  hoursPerDay: 8.4,                    // 42 h a week over five days, as the State sets it
+  holidays: DEFAULT_HOLIDAYS.slice(),
+  customHolidays: [],                  // [{date, name, half}]
+  yearEnd: {},                         // {2028:{dec24:0.5, dec31:1}} once the State publishes it
+  created: null
+};
+
+const TYPES = {
+  vacation: { label: "Vacation", deducts: true },
+  comp:     { label: "Time off in lieu", short: "In lieu", deducts: false, spendsOvertime: true },
+  sick:     { label: "Sick leave", short: "Sick", deducts: false },
+  remote:   { label: "Remote work", short: "Remote", deducts: false }
+};
+const TYPE_COLOR = { vacation: "vac", comp: "comp", sick: "sick", remote: "remote" };
+
+/* ---------- holiday cache ---------- */
+const holCache = new Map();
+function yearEndFor(year) {
+  return Object.assign({}, YEAR_END[year] || YEAR_END_FALLBACK, (S.settings.yearEnd || {})[year] || {});
+}
+function holidaysFor(year) {
+  const key = year + "|" + S.settings.holidays.join(",") +
+    "|" + JSON.stringify((S.settings.yearEnd || {})[year] || null) +
+    "|" + S.settings.customHolidays.map(c => c.date + (c.half ? "h" : "f")).join(",");
+  if (holCache.has(key)) return holCache.get(key);
+  const map = new Map();
+  const e = easter(year);
+  const ye = yearEndFor(year);
+  for (const def of HOLIDAY_DEFS) {
+    if (!S.settings.holidays.includes(def.key)) continue;
+    const frac = def.yearly ? Number(ye[def.key] || 0) : (def.fraction == null ? 1 : def.fraction);
+    if (!frac) continue;
+    const d = def.fixed ? new Date(Date.UTC(year, def.fixed[0] - 1, def.fixed[1])) : addDays(e, def.easter);
+    map.set(iso(d), { key: def.key, name: def.name, de: def.de, kind: def.kind, fraction: frac, period: def.period });
+  }
+  for (const c of S.settings.customHolidays) {
+    if (c && c.date && yearOf(c.date) === year) {
+      map.set(c.date, { key: "custom", name: c.name || "Office closed", de: "", kind: "custom", fraction: c.half ? 0.5 : 1 });
+    }
+  }
+  holCache.set(key, map);
+  return map;
+}
+function holiday(dateISO) { return holidaysFor(yearOf(dateISO)).get(dateISO) || null; }
+/** 0 = an ordinary day, 0.5 = half the day is free, 1 = the office is shut. */
+function holidayFraction(dateISO) { const x = holiday(dateISO); return x ? x.fraction : 0; }
+function halfWord(x) { return x && x.period === "pm" ? "afternoon off" : "half day off"; }
+function holidayLabel(dateISO) {
+  const x = holiday(dateISO);
+  if (!x) return null;
+  return x.fraction < 1 ? x.name + ", " + halfWord(x) : x.name;
+}
+function isWorkday(d) { return S.settings.workdays.includes(d.getUTCDay()); }
+
+/**
+ * The working days a request actually consumes, as [{date, w}].
+ * Weekends cost nothing, a closed day costs nothing, and a day the State
+ * gives half off costs at most half. A half-day booking caps the day at
+ * 0.5 rather than subtracting it, so booking the free morning of
+ * 1 May still costs 0.5 and never less than zero.
+ */
+function countedDays(req) {
+  const out = [];
+  if (!req || !req.start || !req.end) return out;
+  let d = parseISO(req.start);
+  const end = parseISO(req.end);
+  if (end < d) return out;
+  let guard = 0;
+  while (d <= end && guard++ < 1200) {
+    const s = iso(d);
+    if (isWorkday(d)) {
+      const avail = 1 - holidayFraction(s);
+      if (avail > 0) out.push({ date: s, w: avail });
+    }
+    d = addDays(d, 1);
+  }
+  if (!out.length) return out;
+  const single = req.start === req.end;
+  if (req.halfStart && out[0].date === req.start) out[0].w = Math.min(out[0].w, 0.5);
+  if (req.halfEnd && !single && out[out.length - 1].date === req.end) {
+    const last = out[out.length - 1];
+    last.w = Math.min(last.w, 0.5);
+  }
+  return out.filter(x => x.w > 0);
+}
+function totalDays(req) { return countedDays(req).reduce((a, x) => a + x.w, 0); }
+function daysInYear(req, year) {
+  return countedDays(req).reduce((a, x) => a + (yearOf(x.date) === year ? x.w : 0), 0);
+}
+function needsApproval(req) {
+  if (req.type !== "vacation" && req.type !== "comp") return false;
+  return totalDays(req) > Number(S.settings.approvalThreshold || 0);
+}
+function hoursPerDay() { return Number(S.settings.hoursPerDay) || 8.4; }
+function fmtHours(n) {
+  const v = Math.round(Number(n) * 100) / 100;
+  return String(v) + " h";
+}
+function overlaps(a, b) { return a.start <= b.end && b.start <= a.end; }
+
+/* ============================================================
+   State
+   ============================================================ */
+const S = {
+  db: null, user: null, downloads: null,
+  uid: null, myName: "", isOwner: false, isAdmin: false, canWrite: null,
+  memberId: null,              // which roster entry is me
+  settings: Object.assign({}, DEFAULTS),
+  settingsExists: false,
+  members: [],                 // [{id, name, role, entitlements:{}, carryover:{}, archived}]
+  requests: [],                // [{id, ...}]
+  loaded: { settings: false, members: false, requests: false, overtime: false },
+  overtime: [],                // hours worked beyond the contract, each one approved by hand
+  joiners: [],                 // people who asked to be added
+  links: {},                   // roster id -> claude account id, written by each person
+  profiles: {},                // uid -> {name, email, avatarUrl, color}, resolved live
+  directory: null,             // last directory scan result
+  scanning: false,
+  tab: pref("tab") || "timeline",
+  year: Number(pref("year")) || new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+  reqFilter: "all",
+  ready: false,
+  fatal: null
+};
+
+function member(id) { return S.members.find(m => m.id === id) || null; }
+/* A member's name: a manual override wins, then the live Claude profile,
+   then the name captured when they were added. Names are never trusted
+   from storage when the directory can answer. */
+/* A roster entry is tied to a Claude account either because a manager added
+   them from the directory (m.uid) or because they identified themselves
+   (links/<account>), which anyone may write for their own account. */
+function uidOf(m) { return m && (m.uid || S.links[m.id] || null); }
+function displayName(m) {
+  if (!m) return "Former member";
+  if (m.name) return m.name;
+  const u = uidOf(m);
+  const p = u && S.profiles[u];
+  if (p && p.name) return p.name;
+  return m.nameHint || "Someone";
+}
+function memberName(id) { return displayName(member(id)); }
+function activeMembers() {
+  return S.members.filter(m => !m.archived)
+    .sort((a, b) => displayName(a).localeCompare(displayName(b)));
+}
+function linkedUids() {
+  const ids = new Set();
+  for (const m of S.members) { const u = uidOf(m); if (u) ids.add(u); }
+  for (const j of S.joiners) if (j.uid) ids.add(j.uid);
+  if (S.uid) ids.add(S.uid);
+  return [...ids];
+}
+/** Resolve every id the roster refers to; re-render only if a name moved. */
+let profilesBusy = false;
+async function refreshProfiles() {
+  if (!S.user || profilesBusy) return;
+  const ids = linkedUids();
+  if (!ids.length) return;
+  profilesBusy = true;
+  try {
+    const ps = await S.user.profiles(ids);
+    let changed = false;
+    for (const id of ids) {
+      const p = ps[id] || {};
+      const next = { name: p.name || "", email: p.email || null, avatarUrl: p.avatarUrl || "", color: p.color || "" };
+      const prev = S.profiles[id];
+      if (!prev || prev.name !== next.name || prev.email !== next.email) changed = true;
+      S.profiles[id] = next;
+    }
+    if (changed) render();
+  } catch (e) { /* profiles never rejects, but never let it break a render */ }
+  finally { profilesBusy = false; }
+}
+
+/* Who the managers still have to decide about. */
+function reviewQueue() {
+  const joiners = S.joiners.filter(j => j.uid && !S.members.some(m => uidOf(m) === j.uid));
+  /* Only trust a missing name when the directory is demonstrably answering
+     for someone else, and give a new arrival a day before flagging them. */
+  const working = S.members.some(m => {
+    const u = uidOf(m);
+    return u && u !== S.uid && S.profiles[u] && S.profiles[u].name;
+  });
+  const cutoff = new Date(Date.now() - 86400000).toISOString();
+  const leavers = !working ? [] : S.members.filter(m => {
+    const u = uidOf(m);
+    return !m.archived && u && u !== S.uid && !m.keepUnresolved &&
+      (m.addedAt || "") < cutoff && S.profiles[u] && S.profiles[u].name === "";
+  });
+  return { joiners, leavers, total: joiners.length + leavers.length };
+}
+function me() { return member(S.memberId); }
+function amManager() { return S.isOwner || S.isAdmin || (me() && me().role === "manager"); }
+function managerCount() { return S.members.filter(m => !m.archived && m.role === "manager").length; }
+function readOnly() { return S.canWrite === false; }
+/* Who may change the roster and the settings. Backed by the artifact's own
+   access rules, so it is a real boundary, not just a hidden button. */
+function canEditTeam() { return (S.isAdmin || S.isOwner) && !readOnly(); }
+
+function newId(p) {
+  return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* ---------- balances ---------- */
+function entitlement(m, year) {
+  if (!m) return 0;
+  const e = m.entitlements && m.entitlements[year];
+  return Number(e == null ? S.settings.defaultDays : e) || 0;
+}
+function carryover(m, year) {
+  if (!m || !m.carryover) return 0;
+  return Number(m.carryover[year] || 0);
+}
+function balance(mid, year) {
+  const m = member(mid);
+  const ent = entitlement(m, year), carry = carryover(m, year);
+  let taken = 0, pending = 0, sick = 0, remote = 0;
+  for (const r of S.requests) {
+    if (r.memberId !== mid) continue;
+    if (r.status === "rejected" || r.status === "cancelled") continue;
+    const d = daysInYear(r, year);
+    if (!d) continue;
+    if (r.type === "vacation") { if (r.status === "pending") pending += d; else taken += d; }
+    else if (r.type === "sick") sick += d;
+    else if (r.type === "remote") remote += d;
+  }
+  return { ent, carry, taken, pending, sick, remote, left: ent + carry - taken - pending };
+}
+
+/* ---------- overtime ----------
+   Hours bank up only once a manager has approved them, and run down when
+   someone takes time off in lieu. The bank itself is cumulative: it does
+   not reset in January, the way a flexitime balance never does. */
+function overtimeBalance(mid) {
+  let banked = 0, pending = 0, spent = 0;
+  for (const o of S.overtime) {
+    if (o.memberId !== mid) continue;
+    const hrs = Number(o.hours) || 0;
+    if (o.status === "pending") pending += hrs;
+    else if (o.status === "approved") banked += hrs;
+  }
+  for (const r of S.requests) {
+    if (r.memberId !== mid || r.type !== "comp") continue;
+    if (r.status === "rejected" || r.status === "cancelled") continue;
+    spent += totalDays(r) * hoursPerDay();
+  }
+  return { banked, pending, spent, left: banked - spent };
+}
+function overtimeInYear(mid, year) {
+  let approved = 0, pending = 0, spent = 0;
+  for (const o of S.overtime) {
+    if (o.memberId !== mid || yearOf(o.date) !== year) continue;
+    const hrs = Number(o.hours) || 0;
+    if (o.status === "pending") pending += hrs;
+    else if (o.status === "approved") approved += hrs;
+  }
+  for (const r of S.requests) {
+    if (r.memberId !== mid || r.type !== "comp") continue;
+    if (r.status === "rejected" || r.status === "cancelled") continue;
+    spent += daysInYear(r, year) * hoursPerDay();
+  }
+  return { approved, pending, spent };
+}
+
+/* ---------- absences on a given day ---------- */
+function absencesOn(dateISO) {
+  const out = [];
+  for (const r of S.requests) {
+    if (r.status === "rejected" || r.status === "cancelled") continue;
+    if (r.start > dateISO || r.end < dateISO) continue;
+    if (!countedDays(r).some(x => x.date === dateISO)) continue;
+    out.push(r);
+  }
+  return out;
+}
+
+/* ============================================================
+   Platform wiring
+   ============================================================ */
+async function boot() {
+  for (let i = 0; i < 40 && (!window.claude || typeof window.claude.use !== "function"); i++) {
+    await new Promise(r => setTimeout(r, 250));
+  }
+  if (!window.claude || typeof window.claude.use !== "function") {
+    return fail("This page needs to be opened from claude.ai so it can load the team’s data.");
+  }
+  const [db, user, downloads] = await Promise.all([
+    claude.use("db").catch(() => null),
+    claude.use("user").catch(() => null),
+    claude.use("downloads").catch(() => null)
+  ]);
+  S.db = db; S.user = user; S.downloads = downloads;
+  if (!db) return fail("Shared data isn’t available in this view. Sign in to claude.ai and reopen the artifact.");
+
+  if (user) {
+    S.uid = await user.id();
+    const m = await user.me();
+    S.myName = m.name || "";
+    S.isOwner = m.isOwner; S.isAdmin = m.canEdit || m.isOwner;
+    S.canWrite = await user.can("data.write");
+  }
+
+  subscribe();
+}
+
+function fail(msg) {
+  S.fatal = msg;
+  const v = $("#view"); clear(v);
+  v.append(h("div", { class: "gate" },
+    h("h2", { text: "Can’t load the team" }),
+    h("p", { text: msg })));
+}
+
+function subscribe() {
+  const onErr = (what) => (e) => {
+    if (e && (e.code === "revoked" || e.code === "not_granted")) {
+      S.canWrite = false; render();
+    } else {
+      toast("Lost the live connection to " + what + ". Reload the page.", true);
+    }
+  };
+
+  S.db.doc("config/settings").onSnapshot(snap => {
+    if (snap.exists) {
+      const d = snap.data();
+      S.settingsExists = true;
+      S.settings = Object.assign({}, DEFAULTS, d);
+      if (!Array.isArray(S.settings.workdays) || !S.settings.workdays.length) S.settings.workdays = DEFAULTS.workdays.slice();
+      if (!Array.isArray(S.settings.holidays)) S.settings.holidays = DEFAULT_HOLIDAYS.slice();
+      if (!Array.isArray(S.settings.customHolidays)) S.settings.customHolidays = [];
+      if (!S.settings.yearEnd || typeof S.settings.yearEnd !== "object") S.settings.yearEnd = {};
+    } else {
+      S.settingsExists = false;
+      S.settings = Object.assign({}, DEFAULTS);
+    }
+    holCache.clear();
+    S.loaded.settings = true;
+    render();
+    migrateHolidays();
+  }, onErr("settings"));
+
+  S.db.collection("members").limit(400).onSnapshot(snap => {
+    S.members = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    S.loaded.members = true;
+    resolveMe();
+    refreshProfiles();
+    render();
+  }, onErr("the team roster"));
+
+  S.db.collection("overtime").limit(1000).onSnapshot(snap => {
+    S.overtime = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    S.overtime.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    S.loaded.overtime = true;
+    render();
+  }, onErr("overtime"));
+
+  S.db.collection("links").limit(400).onSnapshot(snap => {
+    const next = {};
+    for (const d of snap.docs) { const v = d.data(); if (v && v.memberId) next[v.memberId] = d.id; }
+    S.links = next;
+    refreshProfiles();
+    render();
+  }, () => { /* links are a convenience; the roster still works without them */ });
+
+  S.db.collection("joiners").limit(100).onSnapshot(snap => {
+    S.joiners = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    refreshProfiles();
+    render();
+  }, () => { /* no join queue in this view — the picker still works */ });
+
+  S.db.collection("requests").limit(1000).onSnapshot(snap => {
+    S.requests = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    S.requests.sort((a, b) => (b.start || "").localeCompare(a.start || "") || (b.createdAt || "").localeCompare(a.createdAt || ""));
+    S.loaded.requests = true;
+    render();
+  }, onErr("leave requests"));
+}
+
+/* Who am I on the roster? Remembered privately per viewer. Runs on every
+   roster change, because the entry that names me may arrive after I do. */
+let profileChecked = false;
+async function resolveMe() {
+  if (S.memberId && member(S.memberId)) return;
+  if (!S.members.length) return;
+  const claimed = S.members.find(m => S.uid && uidOf(m) === S.uid);
+  if (claimed) { S.memberId = claimed.id; pref("memberId", claimed.id); render(); return; }
+  const local = pref("memberId");
+  if (local && member(local)) { S.memberId = local; render(); return; }
+  if (!profileChecked && S.uid) {
+    profileChecked = true;
+    try {
+      const snap = await S.db.doc("data/users/" + S.uid + "/profile").get();
+      const mid = snap.exists && snap.data().memberId;
+      if (mid && member(mid)) { S.memberId = mid; render(); }
+    } catch (e) { /* private subtree unavailable — the picker handles it */ }
+  }
+}
+
+async function claimMember(mid) {
+  S.memberId = mid;
+  pref("memberId", mid);
+  if (S.uid) {
+    try { await S.db.doc("data/users/" + S.uid + "/profile").set({ memberId: mid }); } catch (e) {}
+    try { await S.db.doc("links/" + S.uid).set({ memberId: mid, at: new Date().toISOString() }); } catch (e) {}
+  }
+  render();
+}
+
+/* ---------- writes ---------- */
+async function write(fn, okMsg) {
+  try {
+    await fn();
+    if (okMsg) toast(okMsg);
+    return true;
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "invalid_argument") {
+      S.canWrite = false;
+      toast("You have read-only access to this tracker.", true);
+      render();
+    } else if (code === "quota_exceeded") {
+      toast("The tracker’s storage is full. Archive old years to free space.", true);
+    } else if (code === "resource_exhausted") {
+      toast("Too many changes at once. Wait a moment and try again.", true);
+    } else {
+      toast("That didn’t save. Check your connection and try again.", true);
+    }
+    return false;
+  }
+}
+/* One-off: teams set up before the State of Fribourg calendar was wired in
+   are missing 1 May, 24 and 31 December. Runs at most once per page load. */
+let migrated = false;
+function migrateHolidays() {
+  if (migrated || !S.settingsExists) return;
+  if (Number(S.settings.holidayVersion || 0) >= 2) return;
+  migrated = true;
+  S.db.doc("config/settings").update({
+    holidays: DEFAULT_HOLIDAYS.slice(), holidayVersion: 2
+  }).catch(() => {});
+}
+
+function saveSettings(patch) {
+  const next = Object.assign({}, S.settings, patch);
+  if (!next.created) next.created = new Date().toISOString();
+  next.holidayVersion = 2;
+  return write(() => S.db.doc("config/settings").set(next), "Settings saved");
+}
+
+/* ============================================================
+   Render
+   ============================================================ */
+const TABS = [
+  { id: "timeline", label: "Timeline" },
+  { id: "calendar", label: "Calendar" },
+  { id: "requests", label: "Requests" },
+  { id: "balances", label: "Balances" },
+  { id: "team", label: "Team" },
+  { id: "settings", label: "Settings" }
+];
+
+function pendingForMe() {
+  if (!amManager()) return 0;
+  return S.requests.filter(r => r.status === "pending").length +
+    S.overtime.filter(o => o.status === "pending").length;
+}
+
+function setTab(id) { S.tab = id; pref("tab", id); render(); }
+function setYear(y) { S.year = y; pref("year", y); render(); }
+
+function render() {
+  if (S.fatal) return;
+  const allLoaded = S.loaded.settings && S.loaded.members && S.loaded.requests && S.loaded.overtime;
+  $("#teamName").textContent = S.settings.teamName || DEFAULTS.teamName;
+  const view = $("#view");
+
+  if (!allLoaded) return;
+
+  if (S.memberId && !member(S.memberId)) S.memberId = null;
+  // first run
+  if (!S.members.length) { clear(view); view.append(renderSetup()); renderTabs(true); $("#whoami").textContent = ""; return; }
+  // who are you?
+  if (!S.memberId) { clear(view); view.append(renderIdentity()); renderTabs(true); $("#whoami").textContent = ""; return; }
+
+  renderTabs(false);
+  $("#whoami").textContent = memberName(S.memberId) + (amManager() ? " · manager" : "");
+
+  clear(view);
+  let body;
+  try {
+    if (S.tab === "timeline") body = renderTimeline();
+    else if (S.tab === "calendar") body = renderCalendar();
+    else if (S.tab === "requests") body = renderRequests();
+    else if (S.tab === "balances") body = renderBalances();
+    else if (S.tab === "team") body = renderTeam();
+    else body = renderSettings();
+  } catch (e) {
+    console.error(e);
+    body = h("div", { class: "empty" }, h("strong", { text: "That view didn’t render" }), "Switch tabs and come back.");
+  }
+  view.append(body);
+  refreshProfiles();
+}
+
+function renderTabs(hide) {
+  const nav = $("#tabs"); clear(nav);
+  if (hide) return;
+  const pend = pendingForMe();
+  for (const t of TABS) {
+    if (t.id === "settings" && !canEditTeam()) continue;
+    const b = h("button", { type: "button", onclick: () => setTab(t.id) }, t.label);
+    if (t.id === S.tab) b.setAttribute("aria-current", "true");
+    if (t.id === "requests" && pend) b.append(h("span", { class: "badge", text: String(pend) }));
+    if (t.id === "team" && amManager() && reviewQueue().total) {
+      b.append(h("span", { class: "badge", text: String(reviewQueue().total) }));
+    }
+    nav.append(b);
+  }
+}
+
+function yearPicker() {
+  const now = new Date().getFullYear();
+  const sel = h("select", { "aria-label": "Year", style: "width:auto", onchange: e => setYear(Number(e.target.value)) });
+  for (let y = now - 3; y <= now + 2; y++) {
+    const o = h("option", { value: y, text: String(y) });
+    if (y === S.year) o.selected = true;
+    sel.append(o);
+  }
+  return sel;
+}
+
+function overtimeButton(label) {
+  const b = h("button", { class: "btn", type: "button", onclick: () => openOvertime() }, label || "Log overtime");
+  if (readOnly()) { b.disabled = true; b.title = "You have read-only access to this tracker."; }
+  return b;
+}
+function bookButton(label) {
+  const b = h("button", { class: "btn primary", type: "button", onclick: () => openBooking() }, label || "Book leave");
+  if (readOnly()) { b.disabled = true; b.title = "You have read-only access to this tracker."; }
+  return b;
+}
+
+/* ============================================================
+   First run
+   ============================================================ */
+function renderSetup() {
+  if (!canEditTeam() && S.canWrite === false) {
+    return h("div", { class: "gate" },
+      h("h2", { text: "Nothing set up yet" }),
+      h("p", { text: "The team roster is empty. Ask whoever owns this tracker to add the group." }));
+  }
+  const names = [{ name: S.myName || "", role: "manager" }, { name: "", role: "member" }, { name: "", role: "member" }];
+  const wrap = h("div", { class: "setup" });
+
+  const teamIn = h("input", { type: "text", value: DEFAULTS.teamName });
+  const daysIn = h("input", { type: "number", min: "0", max: "60", step: "0.5", value: String(DEFAULTS.defaultDays) });
+  const thrIn = h("input", { type: "number", min: "0", max: "30", step: "0.5", value: String(DEFAULTS.approvalThreshold) });
+  const list = h("div", { class: "mlist" });
+
+  function drawList() {
+    clear(list);
+    names.forEach((n, i) => {
+      const nameIn = h("input", { type: "text", value: n.name, placeholder: "Full name", oninput: e => { n.name = e.target.value; } });
+      const mgr = h("input", { type: "checkbox", onchange: e => { n.role = e.target.checked ? "manager" : "member"; } });
+      mgr.checked = n.role === "manager";
+      list.append(h("div", { class: "mrow" },
+        h("div", { class: "nm" }, nameIn),
+        h("label", { class: "check", style: "margin:0" }, mgr, h("span", { text: "Approves leave" })),
+        h("button", { class: "btn sm ghost", type: "button", onclick: () => { names.splice(i, 1); drawList(); } }, "Remove")));
+    });
+    list.append(h("div", { class: "mrow" },
+      h("button", { class: "btn sm", type: "button", onclick: () => { names.push({ name: "", role: "member" }); drawList(); } }, "Add another person")));
+  }
+  drawList();
+
+  const go = h("button", { class: "btn primary", type: "button" }, "Create the team");
+  go.addEventListener("click", async () => {
+    const people = names.map(n => ({ name: n.name.trim(), role: n.role })).filter(n => n.name);
+    if (!people.length) { toast("Add at least one person.", true); return; }
+    go.disabled = true;
+    const ok = await write(async () => {
+      await S.db.doc("config/settings").set(Object.assign({}, DEFAULTS, {
+        holidayVersion: 2,
+        teamName: teamIn.value.trim() || DEFAULTS.teamName,
+        defaultDays: Number(daysIn.value) || 0,
+        approvalThreshold: Number(thrIn.value) || 0,
+        created: new Date().toISOString()
+      }));
+      for (const p of people) {
+        const id = newId("m_");
+        const isMe = S.myName && p.name === S.myName;
+        await S.db.doc("members/" + id).set(blankMember({
+          name: isMe ? "" : p.name, nameHint: p.name, role: p.role,
+          uid: isMe ? S.uid : null, source: isMe ? "self" : "manual"
+        }));
+      }
+    }, "Team created");
+    go.disabled = false;
+    if (!ok) return;
+  });
+
+  wrap.append(
+    h("div", { class: "panel" },
+      h("div", { class: "hd" }, h("h2", { text: "Set up leave tracking" })),
+      h("div", { class: "pad" },
+        h("p", { class: "muted small", style: "margin-top:0" },
+          "A few details to start with. Everything here can be changed later in Settings."),
+        h("label", { class: "field" }, h("span", { text: "Team name" }), teamIn),
+        h("div", { class: "row2" },
+          h("label", { class: "field" }, h("span", { text: "Annual vacation days per person" }), daysIn),
+          h("label", { class: "field" }, h("span", { text: "Days a person can book without approval" }), thrIn)),
+        h("p", { class: "tiny dim", style: "margin:-4px 0 0" },
+          "Anything longer than this goes to a manager. Sick leave and remote days are always logged directly."))),
+    h("div", { class: "panel" },
+      h("div", { class: "hd" }, h("h2", { text: "Who is on the team" })),
+      list),
+    h("div", { style: "margin-top:18px; display:flex; gap:10px; align-items:center" }, go,
+      h("span", { class: "tiny dim", text: "You can pull the rest of the group straight out of your Claude team afterwards." })));
+  return wrap;
+}
+
+/* ============================================================
+   Identity picker
+   ============================================================ */
+function renderIdentity() {
+  const waiting = S.uid && S.joiners.some(j => j.uid === S.uid);
+  if (waiting) {
+    return h("div", { class: "panel", style: "max-width:430px;margin:10vh auto" },
+      h("div", { class: "hd" }, h("h2", { text: "Waiting to be added" })),
+      h("div", { class: "pad muted small" },
+        h("p", { style: "margin-top:0" }, "A manager has to confirm you before your leave shows up here. You’ll see the tracker as soon as they do."),
+        h("button", {
+          class: "btn sm", type: "button", onclick: () =>
+            write(() => S.db.doc("joiners/" + S.uid).delete(), "Withdrawn")
+        }, "Withdraw the request")));
+  }
+
+  const list = h("div", { class: "mlist" });
+  const guess = (S.myName || "").toLowerCase();
+  const sorted = activeMembers().slice().sort((a, b) => {
+    const am = displayName(a).toLowerCase() === guess ? 0 : 1;
+    const bm = displayName(b).toLowerCase() === guess ? 0 : 1;
+    return am - bm || displayName(a).localeCompare(displayName(b));
+  });
+  let offered = 0;
+  for (const m of sorted) {
+    if (uidOf(m) && uidOf(m) !== S.uid) continue;
+    offered++;
+    list.append(h("div", { class: "mrow" },
+      h("div", { class: "nm", text: displayName(m) }),
+      m.role === "manager" ? h("span", { class: "pill mgr", text: "Manager" }) : null,
+      h("button", { class: "btn sm", type: "button", onclick: () => claimMember(m.id) }, "That’s me")));
+  }
+  if (!offered) list.append(h("div", { class: "empty" }, "Everyone on the roster is already matched to an account."));
+
+  const panel = h("div", { class: "panel", style: "max-width:460px;margin:8vh auto" },
+    h("div", { class: "hd" }, h("h2", { text: "Which one are you?" })),
+    h("div", { class: "pad", style: "padding-bottom:4px" },
+      h("p", { class: "muted small", style: "margin:0" },
+        "Pick your name so the tracker knows whose leave to show. You only do this once.")),
+    list);
+
+  const foot = h("div", { class: "pad", style: "border-top:1px solid var(--line)" });
+  if (canEditTeam()) {
+    const nameIn = h("input", { type: "text", placeholder: "Full name", value: S.myName || "" });
+    foot.append(
+      h("label", { class: "field" }, h("span", { text: "Not listed? Add yourself" }), nameIn),
+      h("button", {
+        class: "btn", type: "button", onclick: async () => {
+          const n = nameIn.value.trim(); if (!n) return;
+          const id = newId("m_");
+          const ok = await write(() => S.db.doc("members/" + id).set(blankMember({
+            name: S.myName && n === S.myName ? "" : n, nameHint: n, uid: S.uid || null, source: "self"
+          })));
+          if (ok) claimMember(id);
+        }
+      }, "Add me to the team"));
+  } else if (S.uid) {
+    foot.append(
+      h("p", { class: "muted small", style: "margin:0 0 10px" },
+        "Not on the list? Ask the managers to add you — they confirm it from the Team tab."),
+      h("button", {
+        class: "btn primary", type: "button", onclick: () => write(() =>
+          S.db.doc("joiners/" + S.uid).set({
+            uid: S.uid, nameHint: S.myName || "", requestedAt: new Date().toISOString()
+          }), "Sent to the managers")
+      }, "Ask to be added"));
+  }
+  if (foot.childNodes.length) panel.append(foot);
+  return panel;
+}
+
+/** The shape every roster entry starts from. */
+function blankMember(over) {
+  return Object.assign({
+    name: "", nameHint: "", uid: null, role: "member",
+    entitlements: {}, carryover: {}, archived: false,
+    source: "manual", addedAt: new Date().toISOString()
+  }, over || {});
+}
+
+/* ============================================================
+   Timeline — the year at a glance
+   ============================================================ */
+function renderTimeline() {
+  const frag = document.createDocumentFragment();
+  const today = todayISO();
+
+  /* who is out right now */
+  const out = absencesOn(today);
+  const soon = [];
+  for (let i = 1; i <= 7; i++) {
+    const d = iso(addDays(parseISO(today), i));
+    for (const r of absencesOn(d)) if (!soon.some(x => x.id === r.id) && !out.some(x => x.id === r.id)) soon.push(r);
+  }
+  const myBal = balance(S.memberId, new Date().getFullYear());
+  const ot = overtimeBalance(S.memberId);
+  const pend = S.requests.filter(r => r.status === "pending");
+  const otPend = S.overtime.filter(o => o.status === "pending");
+  const waiting = amManager()
+    ? pend.length + otPend.length
+    : pend.filter(r => r.memberId === S.memberId).length + otPend.filter(o => o.memberId === S.memberId).length;
+
+  const strip = h("div", { class: "today" },
+    h("div", {},
+      h("div", { class: "k", text: "Your vacation left this year" }),
+      h("div", { class: "v num" }, num(myBal.left), h("small", { text: "of " + num(myBal.ent + myBal.carry) + " days" })),
+      myBal.pending ? h("div", { class: "tiny dim", text: num(myBal.pending) + " awaiting approval" }) : null),
+    h("div", {},
+      h("div", { class: "k", text: "Away today" }),
+      h("div", { class: "v num", text: String(out.length) }),
+      out.length
+        ? h("div", { class: "people" }, out.map(r => h("span", { class: "chip " + r.type },
+            h("span", { class: "dot" }), memberName(r.memberId))))
+        : h("div", { class: "tiny dim", text: holidayFraction(today) >= 1 ? (holiday(today).name + " — office closed") : "Everyone is in" })),
+    h("div", {},
+      h("div", { class: "k", text: "Away in the next week" }),
+      h("div", { class: "v num", text: String(soon.length) }),
+      soon.length ? h("div", { class: "people" }, soon.slice(0, 8).map(r =>
+        h("span", { class: "chip " + r.type }, h("span", { class: "dot" }), memberName(r.memberId) + ", " + fmtShort(r.start)))) : null),
+    h("div", {},
+      h("div", { class: "k", text: "Overtime banked" }),
+      h("div", { class: "v num" }, fmtHours(ot.left),
+        ot.left ? h("small", { text: num(ot.left / hoursPerDay()) + " days off in lieu" }) : null),
+      ot.pending ? h("div", { class: "tiny dim", text: fmtHours(ot.pending) + " awaiting approval" }) : null),
+    h("div", {},
+      h("div", { class: "k", text: amManager() ? "Waiting for your decision" : "Your requests awaiting approval" }),
+      h("div", { class: "v num", text: String(waiting) }),
+      h("div", { style: "margin-top:9px;display:flex;gap:7px;flex-wrap:wrap" }, bookButton(), overtimeButton()))
+  );
+  frag.append(strip);
+
+  /* the year grid */
+  const panel = h("div", { class: "panel", style: "margin-top:18px" });
+  panel.append(h("div", { class: "hd" },
+    h("h2", { text: "The year at a glance" }),
+    h("span", { class: "spacer" }),
+    yearPicker()));
+
+  const wrap = h("div", { class: "tl-wrap" });
+  const tl = h("div", { class: "tl" });
+  const y = S.year;
+  const dayCount = isLeap(y) ? 366 : 365;
+  const dates = [];
+  for (let i = 0; i < dayCount; i++) dates.push(iso(addDays(new Date(Date.UTC(y, 0, 1)), i)));
+  const namew = Math.min(170, Math.max(118, 10 + 7.6 * Math.max(8, ...activeMembers().map(m => m.name.length))));
+  tl.style.setProperty("--namew", namew + "px");
+
+  /* month header */
+  const monthRow = h("div", { class: "tl-row months" });
+  monthRow.append(h("div", { class: "tl-name", text: String(y) }));
+  const monthDays = h("div", { class: "tl-days" });
+  for (let m = 0; m < 12; m++) {
+    const n = daysInMonth(y, m);
+    monthDays.append(h("div", { class: "mo", style: "width:calc(" + n + " * var(--dayw))", text: n >= 28 ? MON3[m] : MON3[m][0] }));
+  }
+  monthRow.append(monthDays);
+  tl.append(monthRow);
+
+  const holMap = holidaysFor(y);
+  const members = activeMembers();
+  for (const m of members) {
+    const row = h("div", { class: "tl-row" });
+    const left = h("div", { class: "tl-name" },
+      m.id === S.memberId ? h("span", { class: "dot", style: "width:5px;height:5px;border-radius:50%;background:var(--accent);flex:0 0 auto" }) : null,
+      h("span", { text: m.name, style: "overflow:hidden;text-overflow:ellipsis" }));
+    left.title = m.name + " — " + num(balance(m.id, y).left) + " vacation days left";
+    row.append(left);
+    const days = h("div", { class: "tl-days" });
+
+    // index this member's absences by date
+    const byDate = new Map();
+    for (const r of S.requests) {
+      if (r.memberId !== m.id) continue;
+      if (r.status === "rejected" || r.status === "cancelled") continue;
+      if (yearOf(r.end) < y || yearOf(r.start) > y) continue;
+      for (const c of countedDays(r)) if (yearOf(c.date) === y) byDate.set(c.date, { r, w: c.w });
+    }
+
+    for (const ds of dates) {
+      const d = parseISO(ds);
+      const cls = ["d"];
+      if (d.getUTCDate() === 1) cls.push("m0");
+      const hol = holMap.get(ds);
+      const hit = byDate.get(ds);
+      if (hit) {
+        cls.push(hit.r.type);
+        if (hit.r.status === "pending") cls.push("pend");
+      } else if (hol && hol.fraction >= 1) cls.push("hol");
+      else if (!isWorkday(d)) cls.push("we");
+      if (ds === today) cls.push("today");
+      const cell = h("div", { class: cls.join(" ") });
+      if (hit) {
+        cell.title = m.name + " — " + TYPES[hit.r.type].label + ", " + fmtRange(hit.r.start, hit.r.end) +
+          (hit.w === 0.5 ? " (half day)" : "") + (hit.r.status === "pending" ? " (awaiting approval)" : "");
+        cell.style.cursor = "pointer";
+        cell.addEventListener("click", () => openRequest(hit.r.id));
+        if (hit.w === 0.5) cell.style.background =
+          "linear-gradient(to bottom, var(--" + (TYPE_COLOR[hit.r.type] || "vac") + ") 50%, transparent 50%)";
+      } else if (hol) {
+        cell.title = fmtDate(ds) + " — " + holidayLabel(ds);
+        if (hol.fraction < 1) cell.style.background = "linear-gradient(to bottom, transparent 50%, var(--hol) 50%)";
+      }
+      days.append(cell);
+    }
+    row.append(days);
+    tl.append(row);
+    tl.append(h("div", { class: "tl-sep" }));
+  }
+  wrap.append(tl);
+  panel.append(wrap);
+  panel.append(h("div", { class: "pad", style: "padding-top:12px" },
+    h("div", { class: "legend" },
+      h("span", {}, h("i", { style: "background:var(--vac)" }), "Vacation"),
+      h("span", {}, h("i", { style: "background:var(--comp)" }), "Time off in lieu"),
+      h("span", {}, h("i", { style: "background:var(--sick)" }), "Sick"),
+      h("span", {}, h("i", { style: "background:var(--remote)" }), "Remote"),
+      h("span", {}, h("i", { style: "background:var(--hol)" }), "Office closed"),
+      h("span", {}, h("i", { style: "background:linear-gradient(to bottom,var(--surface-2) 50%,var(--hol) 50%)" }), "Half day off"),
+      h("span", {}, h("i", { style: "background:var(--vac);opacity:.42" }), "Awaiting approval"))));
+  frag.append(panel);
+
+  // scroll roughly to today on first paint of the current year
+  if (y === new Date().getFullYear()) {
+    requestAnimationFrame(() => {
+      const idx = dates.indexOf(today);
+      if (idx > 0) wrap.scrollLeft = Math.max(0, idx * 4 - wrap.clientWidth / 2);
+    });
+  }
+  return frag;
+}
+
+/* ============================================================
+   Month calendar
+   ============================================================ */
+function renderCalendar() {
+  const panel = h("div", { class: "panel" });
+  const y = S.year, m = S.calMonth;
+  const step = (n) => {
+    let mm = S.calMonth + n, yy = S.year;
+    if (mm < 0) { mm = 11; yy--; } else if (mm > 11) { mm = 0; yy++; }
+    S.calMonth = mm; S.year = yy; pref("year", yy); render();
+  };
+  panel.append(h("div", { class: "hd" },
+    h("button", { class: "btn sm ghost", type: "button", "aria-label": "Previous month", onclick: () => step(-1) }, "‹"),
+    h("h2", { text: MONTHS[m] + " " + y, style: "min-width:150px" }),
+    h("button", { class: "btn sm ghost", type: "button", "aria-label": "Next month", onclick: () => step(1) }, "›"),
+    h("span", { class: "spacer" }),
+    h("button", {
+      class: "btn sm", type: "button", onclick: () => {
+        const n = new Date(); S.year = n.getFullYear(); S.calMonth = n.getMonth(); pref("year", S.year); render();
+      }
+    }, "Today"),
+    bookButton()));
+
+  const grid = h("div", { class: "cal" });
+  for (const d of DOW) grid.append(h("div", { class: "dow", text: d }));
+
+  const first = new Date(Date.UTC(y, m, 1));
+  const lead = mondayIndex(first);
+  const total = daysInMonth(y, m);
+  const cells = lead + total;
+  const rows = Math.ceil(cells / 7) * 7;
+  const today = todayISO();
+
+  for (let i = 0; i < rows; i++) {
+    const d = addDays(first, i - lead);
+    const ds = iso(d);
+    const inMonth = d.getUTCMonth() === m;
+    const cls = ["cell"];
+    if (!inMonth) cls.push("out");
+    if (!isWorkday(d)) cls.push("we");
+    const hol = holiday(ds);
+    if (hol) { cls.push("holiday"); if (hol.fraction < 1) cls.push("half"); }
+    if (ds === today) cls.push("istoday");
+    const cell = h("div", { class: cls.join(" ") });
+    const nline = h("div", { class: "n" }, h("b", { text: String(d.getUTCDate()) }));
+    if (hol && hol.fraction < 1) nline.append(h("span", { class: "halfmark", title: "Half day off", text: "½" }));
+    cell.append(nline);
+    if (hol) cell.append(h("div", { class: "holname", text: holidayLabel(ds) }));
+    if (inMonth && isWorkday(d) && (!hol || hol.fraction < 1)) {
+      const abs = absencesOn(ds);
+      if (abs.length) {
+        const ul = h("ul");
+        for (const r of abs.slice(0, 5)) {
+          const w = (countedDays(r).find(c => c.date === ds) || {}).w;
+          const li = h("li", {
+            class: r.type + (r.status === "pending" ? " pend" : ""),
+            text: memberName(r.memberId) + (w === 0.5 ? " ½" : ""),
+            title: memberName(r.memberId) + " — " + TYPES[r.type].label + (r.status === "pending" ? ", awaiting approval" : "")
+          });
+          li.style.cursor = "pointer";
+          li.addEventListener("click", () => openRequest(r.id));
+          ul.append(li);
+        }
+        if (abs.length > 5) ul.append(h("li", { class: "dim", text: "+" + (abs.length - 5) + " more" }));
+        cell.append(ul);
+      } else {
+        cell.style.cursor = "pointer";
+        cell.title = "Book leave on " + fmtDate(ds);
+        cell.addEventListener("click", () => { if (!readOnly()) openBooking(ds); });
+      }
+    }
+    grid.append(cell);
+  }
+  panel.append(grid);
+  panel.append(h("div", { class: "pad" }, h("div", { class: "legend" },
+    h("span", {}, h("i", { style: "background:var(--vac)" }), "Vacation"),
+    h("span", {}, h("i", { style: "background:var(--comp)" }), "Time off in lieu"),
+    h("span", {}, h("i", { style: "background:var(--sick)" }), "Sick"),
+    h("span", {}, h("i", { style: "background:var(--remote)" }), "Remote"),
+    h("span", { class: "dim", text: "Dashed outline means it still needs a manager’s approval." }))));
+  return panel;
+}
+
+/* ============================================================
+   Requests
+   ============================================================ */
+function statusChip(r) {
+  if (r.status === "pending") return h("span", { class: "chip pending", text: "Awaiting approval" });
+  if (r.status === "approved") return h("span", { class: "chip approved", text: r.autoApproved ? "Logged" : "Approved" });
+  if (r.status === "rejected") return h("span", { class: "chip rejected", text: "Declined" });
+  return h("span", { class: "chip cancelled", text: "Cancelled" });
+}
+
+function renderRequests() {
+  const panel = h("div", { class: "panel" });
+  const filters = [
+    ["all", "All"], ["pending", "Awaiting approval"], ["mine", "Mine"], ["upcoming", "Upcoming"],
+    ["vacation", "Vacation"], ["overtime", "Overtime"], ["comp", "Time off in lieu"],
+    ["sick", "Sick"], ["remote", "Remote"]
+  ];
+  const seg = h("div", { class: "seg", style: "max-width:100%;overflow-x:auto" });
+  for (const [id, label] of filters) {
+    const b = h("button", { type: "button", onclick: () => { S.reqFilter = id; render(); } }, label);
+    b.setAttribute("aria-pressed", String(S.reqFilter === id));
+    seg.append(b);
+  }
+  panel.append(h("div", { class: "hd", style: "flex-wrap:wrap" }, seg, h("span", { class: "spacer" }),
+    S.downloads ? h("button", { class: "btn sm", type: "button", onclick: exportCSV }, "Export CSV") : null,
+    overtimeButton(), bookButton()));
+
+  const today = todayISO();
+  const f = S.reqFilter;
+
+  let leave = (f === "overtime") ? [] : S.requests.slice();
+  if (f === "pending") leave = leave.filter(r => r.status === "pending");
+  else if (f === "mine") leave = leave.filter(r => r.memberId === S.memberId);
+  else if (f === "upcoming") leave = leave.filter(r => r.end >= today && r.status !== "cancelled" && r.status !== "rejected");
+  else if (["vacation", "sick", "remote", "comp"].includes(f)) leave = leave.filter(r => r.type === f);
+
+  let ot = ["vacation", "sick", "remote", "comp", "upcoming"].includes(f) ? [] : S.overtime.slice();
+  if (f === "pending") ot = ot.filter(o => o.status === "pending");
+  else if (f === "mine") ot = ot.filter(o => o.memberId === S.memberId);
+
+  /* one ledger, newest first, except for the queues you work through forwards */
+  const rows = leave.map(r => ({ k: "leave", x: r, d: r.start }))
+    .concat(ot.map(o => ({ k: "ot", x: o, d: o.date })));
+  const forwards = (f === "pending" || f === "upcoming");
+  rows.sort((a, b) => forwards ? a.d.localeCompare(b.d) : b.d.localeCompare(a.d));
+
+  if (!rows.length) {
+    panel.append(h("div", { class: "empty" },
+      h("strong", { text: "Nothing here yet" }),
+      f === "pending" ? "Nothing is waiting on a decision."
+        : f === "overtime" ? "Log extra hours and they land here for approval."
+          : "Book leave and it will show up in this list."));
+    return panel;
+  }
+
+  for (const r of rows) panel.append(r.k === "ot" ? overtimeRow(r.x) : requestRow(r.x));
+  return panel;
+}
+
+/* ---------- one overtime entry ---------- */
+function overtimeRow(o) {
+  const mine = o.memberId === S.memberId;
+  const canDecide = amManager() && o.status === "pending" && (!mine || managerCount() <= 1 || S.isOwner);
+  const row = h("div", { class: "req" });
+  row.append(h("div", { class: "body" },
+    h("div", { class: "who" }, memberName(o.memberId), mine ? h("span", { class: "dim", text: " (you)" }) : null),
+    h("div", { class: "meta num" }, fmtDate(o.date), " · ", fmtHours(o.hours),
+      o.status === "approved" ? h("span", { class: "dim", text: " · " + num(Number(o.hours) / hoursPerDay()) + " days in lieu" }) : null),
+    h("div", { style: "margin-top:6px;display:flex;gap:6px;flex-wrap:wrap" },
+      h("span", { class: "chip overtime" }, h("span", { class: "dot" }), "Overtime"),
+      statusChip(o)),
+    o.note ? h("div", { class: "note", text: o.note }) : null,
+    o.decisionNote ? h("div", { class: "note", text: "Manager: " + o.decisionNote }) : null));
+
+  const acts = h("div", { class: "acts" });
+  if (canDecide) {
+    acts.append(h("button", { class: "btn sm primary", type: "button", onclick: () => decideOvertime(o, "approved") }, "Approve"));
+    acts.append(h("button", { class: "btn sm danger", type: "button", onclick: () => decideOvertime(o, "rejected") }, "Decline"));
+  } else if (o.status === "pending" && mine) {
+    acts.append(h("span", { class: "tiny dim", text: "With " + (managerCount() ? "your manager" : "nobody — set a manager in Team") }));
+  }
+  if (amManager() || (mine && o.status === "pending")) {
+    acts.append(h("button", {
+      class: "btn sm ghost", type: "button", onclick: () => askModal({
+        title: "Remove this overtime?",
+        text: fmtHours(o.hours) + " on " + fmtDate(o.date) + " for " + memberName(o.memberId) + ".",
+        ok: "Remove", danger: true,
+        onOk: () => write(() => S.db.doc("overtime/" + o.id).delete(), "Removed")
+      })
+    }, "Remove"));
+  }
+  row.append(acts);
+  return row;
+}
+
+function decideOvertime(o, status) {
+  const commit = (note) => write(() => S.db.doc("overtime/" + o.id).update({
+    status, decidedBy: S.memberId, decidedAt: new Date().toISOString(), decisionNote: note || ""
+  }), status === "approved" ? "Approved — the hours are banked" : "Declined");
+  if (status === "approved") return commit("");
+  askModal({
+    title: "Decline these hours",
+    label: "Reason (optional — " + memberName(o.memberId) + " will see it)",
+    placeholder: "e.g. already compensated in the monthly total",
+    ok: "Decline", danger: true,
+    onOk: (v) => commit(v)
+  });
+}
+
+/* ---------- logging overtime ---------- */
+function openOvertime(dateISO) {
+  if (!S.memberId) return;
+  const forSel = h("select", {});
+  for (const m of activeMembers()) {
+    const op = h("option", { value: m.id, text: memberName(m.id) + (m.id === S.memberId ? " (you)" : "") });
+    if (m.id === S.memberId) op.selected = true;
+    forSel.append(op);
+  }
+  const dateIn = h("input", { type: "date", value: dateISO || todayISO(), oninput: recalc });
+  const hoursIn = h("input", { type: "number", step: "0.25", min: "0.25", max: "16", value: "2", oninput: recalc });
+  const quick = h("div", { class: "seg", style: "margin-top:8px" });
+  for (const v of [1, 2, 4, 8]) {
+    quick.append(h("button", {
+      type: "button", onclick: () => { hoursIn.value = String(v); recalc(); }
+    }, v + " h"));
+  }
+  const note = h("textarea", { placeholder: "What the extra hours were for — beamtime, a deadline, a weekend measurement" });
+  const calc = h("div", { class: "calc" });
+  const submit = h("button", { class: "btn primary", type: "button" }, "Send for approval");
+
+  function recalc() {
+    clear(calc);
+    const hrs = Number(hoursIn.value);
+    const d = dateIn.value;
+    if (!d || !(hrs > 0)) {
+      calc.append(h("span", { class: "bad", text: "Enter a date and a number of hours." }));
+      submit.disabled = true; return;
+    }
+    submit.disabled = false;
+    for (const b of quick.children) b.setAttribute("aria-pressed", String(parseFloat(b.textContent) === hrs));
+    const bal = overtimeBalance(forSel.value);
+    calc.append(h("div", {}, "Worth ", h("b", { text: num(hrs / hoursPerDay()) }),
+      hrs / hoursPerDay() === 1 ? " day off in lieu" : " days off in lieu",
+      " at " + num(hoursPerDay()) + " h a day."));
+    calc.append(h("span", { class: "tiny dim", style: "display:block;margin-top:4px" },
+      "The bank holds " + fmtHours(bal.left) + " now, and " + fmtHours(bal.left + hrs) + " once this is approved."));
+    const hol = holiday(d), dd = parseISO(d);
+    if (hol) calc.append(h("span", { class: "tiny dim", style: "display:block;margin-top:4px", text: "That day is " + holidayLabel(d) + "." }));
+    else if (!isWorkday(dd)) calc.append(h("span", { class: "tiny dim", style: "display:block;margin-top:4px", text: "That is a weekend." }));
+    calc.append(h("span", { class: "warn" }, "Every overtime entry goes to a manager before it counts."));
+  }
+
+  submit.addEventListener("click", async () => {
+    const hrs = Number(hoursIn.value);
+    if (!dateIn.value || !(hrs > 0)) return;
+    const id = newId("o_");
+    submit.disabled = true;
+    const ok = await write(() => S.db.doc("overtime/" + id).set({
+      memberId: forSel.value, date: dateIn.value, hours: hrs,
+      note: note.value.trim(), status: "pending",
+      createdBy: S.memberId, createdAt: new Date().toISOString(),
+      decidedBy: null, decidedAt: null, decisionNote: ""
+    }), "Sent to a manager");
+    submit.disabled = false;
+    if (ok) closeModal();
+  });
+
+  const body = h("div", {},
+    activeMembers().length > 1 && amManager()
+      ? h("label", { class: "field" }, h("span", { text: "Who worked them" }), forSel) : null,
+    h("div", { class: "row2" },
+      h("label", { class: "field" }, h("span", { text: "Day" }), dateIn),
+      h("label", { class: "field" }, h("span", { text: "Hours beyond the contract" }), hoursIn)),
+    quick,
+    h("div", { style: "height:14px" }),
+    calc,
+    h("label", { class: "field" }, h("span", { text: "Reason" }), note));
+  modal("Log overtime", body, [h("span", { class: "spacer" }),
+    h("button", { class: "btn", type: "button", onclick: closeModal }, "Cancel"), submit]);
+  recalc();
+}
+
+function requestRow(r) {
+  const days = totalDays(r);
+  const mine = r.memberId === S.memberId;
+  const canDecide = amManager() && r.status === "pending" && (!mine || managerCount() <= 1 || S.isOwner);
+  const row = h("div", { class: "req" });
+  const body = h("div", { class: "body" },
+    h("div", { class: "who" }, memberName(r.memberId), mine ? h("span", { class: "dim", text: " (you)" }) : null),
+    h("div", { class: "meta num" }, fmtRange(r.start, r.end), " · ", plural(days, "day", "days"),
+      r.halfStart && r.start === r.end ? (r.halfPeriod === "pm" ? " · afternoon" : " · morning") : ""),
+    h("div", { style: "margin-top:6px;display:flex;gap:6px;flex-wrap:wrap" },
+      h("span", { class: "chip " + r.type }, h("span", { class: "dot" }), TYPES[r.type].label),
+      statusChip(r)),
+    r.note ? h("div", { class: "note", text: r.note }) : null,
+    r.decisionNote ? h("div", { class: "note", text: "Manager: " + r.decisionNote }) : null);
+  row.append(body);
+
+  const acts = h("div", { class: "acts" });
+  if (canDecide) {
+    acts.append(h("button", { class: "btn sm primary", type: "button", onclick: () => decide(r, "approved") }, "Approve"));
+    acts.append(h("button", { class: "btn sm danger", type: "button", onclick: () => decide(r, "rejected") }, "Decline"));
+  } else if (r.status === "pending" && mine) {
+    acts.append(h("span", { class: "tiny dim", text: "With " + (managerCount() ? "your manager" : "nobody — set a manager in Team") }));
+  }
+  if ((mine || amManager()) && r.status !== "cancelled" && r.end >= todayISO()) {
+    acts.append(h("button", { class: "btn sm ghost", type: "button", onclick: () => cancelRequest(r) }, "Cancel"));
+  }
+  acts.append(h("button", { class: "btn sm ghost", type: "button", onclick: () => openRequest(r.id) }, "Details"));
+  row.append(acts);
+  return row;
+}
+
+function decide(r, status) {
+  const commit = (note) => write(() => S.db.doc("requests/" + r.id).update({
+    status, decidedBy: S.memberId, decidedAt: new Date().toISOString(), decisionNote: note || ""
+  }), status === "approved" ? "Approved" : "Declined");
+  if (status === "approved") { closeModal(); return commit(""); }
+  askModal({
+    title: "Decline this leave",
+    label: "Reason (optional — " + memberName(r.memberId) + " will see it)",
+    placeholder: "e.g. clashes with the beamtime run",
+    ok: "Decline",
+    danger: true,
+    onOk: (v) => commit(v)
+  });
+}
+
+function cancelRequest(r) {
+  askModal({
+    title: "Cancel this leave?",
+    text: fmtRange(r.start, r.end) + " for " + memberName(r.memberId) + ". The days go back into the balance.",
+    ok: "Cancel the leave",
+    danger: true,
+    onOk: () => write(() => S.db.doc("requests/" + r.id).update({
+      status: "cancelled", cancelledBy: S.memberId, cancelledAt: new Date().toISOString()
+    }), "Cancelled")
+  });
+}
+
+/* ============================================================
+   Balances
+   ============================================================ */
+function renderBalances() {
+  const panel = h("div", { class: "panel" });
+  panel.append(h("div", { class: "hd" },
+    h("h2", { text: "Vacation balances" }),
+    h("span", { class: "spacer" }),
+    yearPicker(),
+    S.downloads ? h("button", { class: "btn sm", type: "button", onclick: exportCSV }, "Export CSV") : null));
+
+  const t = h("table");
+  t.append(h("thead", {}, h("tr", {},
+    h("th", { text: "Person" }),
+    h("th", { class: "r", text: "Entitlement" }),
+    h("th", { class: "r", text: "Carried over" }),
+    h("th", { class: "r", text: "Taken" }),
+    h("th", { class: "r", text: "Pending" }),
+    h("th", { class: "r", text: "Left" }),
+    h("th", { class: "r", text: "Sick" }),
+    h("th", { class: "r", text: "Remote" }))));
+  const tb = h("tbody");
+  for (const m of activeMembers()) {
+    const b = balance(m.id, S.year);
+    const cap = Math.max(b.ent + b.carry, 0.001);
+    tb.append(h("tr", {},
+      h("td", {}, h("div", {}, m.name, m.id === S.memberId ? h("span", { class: "dim", text: " (you)" }) : null),
+        h("div", { class: "bar" },
+          h("i", { class: "used", style: "width:" + Math.min(100, b.taken / cap * 100) + "%" }),
+          h("i", { class: "pend", style: "width:" + Math.min(100, b.pending / cap * 100) + "%" }))),
+      h("td", { class: "r num", text: num(b.ent) }),
+      h("td", { class: "r num", text: b.carry ? num(b.carry) : "—" }),
+      h("td", { class: "r num", text: num(b.taken) }),
+      h("td", { class: "r num", text: b.pending ? num(b.pending) : "—" }),
+      h("td", { class: "r num", style: "font-weight:600" + (b.left < 0 ? ";color:var(--danger)" : ""), text: num(b.left) }),
+      h("td", { class: "r num dim", text: b.sick ? num(b.sick) : "—" }),
+      h("td", { class: "r num dim", text: b.remote ? num(b.remote) : "—" })));
+  }
+  t.append(tb);
+  panel.append(h("div", { class: "scroll-x" }, t));
+
+  /* overtime and time off in lieu */
+  const anyOvertime = S.overtime.length > 0 || S.requests.some(r => r.type === "comp");
+  const op = h("div", { class: "panel" });
+  op.append(h("div", { class: "hd" },
+    h("h2", { text: "Overtime" }),
+    h("span", { class: "spacer" }),
+    h("span", { class: "tiny dim", text: "A full day is " + num(hoursPerDay()) + " h" }),
+    overtimeButton("Log overtime")));
+  if (!anyOvertime) {
+    op.append(h("div", { class: "empty" },
+      h("strong", { text: "No overtime logged yet" }),
+      "Hours only count once a manager approves them. They bank up and can be taken back as time off in lieu."));
+  } else {
+    const ot = h("table");
+    ot.append(h("thead", {}, h("tr", {},
+      h("th", { text: "Person" }),
+      h("th", { class: "r", text: "Approved in " + S.year }),
+      h("th", { class: "r", text: "Pending" }),
+      h("th", { class: "r", text: "Taken in lieu" }),
+      h("th", { class: "r", text: "Bank" }),
+      h("th", { class: "r", text: "Days in lieu" }))));
+    const otb = h("tbody");
+    for (const m of activeMembers()) {
+      const y = overtimeInYear(m.id, S.year), all = overtimeBalance(m.id);
+      otb.append(h("tr", {},
+        h("td", {}, memberName(m.id), m.id === S.memberId ? h("span", { class: "dim", text: " (you)" }) : null),
+        h("td", { class: "r num", text: y.approved ? fmtHours(y.approved) : "—" }),
+        h("td", { class: "r num", text: y.pending ? fmtHours(y.pending) : "—" }),
+        h("td", { class: "r num", text: y.spent ? fmtHours(-y.spent) : "—" }),
+        h("td", { class: "r num", style: "font-weight:600" + (all.left < 0 ? ";color:var(--danger)" : ""), text: fmtHours(all.left) }),
+        h("td", { class: "r num dim", text: all.left ? num(Math.round(all.left / hoursPerDay() * 10) / 10) : "—" })));
+    }
+    ot.append(otb);
+    op.append(h("div", { class: "scroll-x" }, ot));
+    op.append(h("div", { class: "pad tiny dim" },
+      "The bank is cumulative and does not reset in January. Taking time off in lieu draws it down at " + num(hoursPerDay()) + " h a day."));
+  }
+
+  /* office closures for the year */
+  const hol = [...holidaysFor(S.year).entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  const gained = hol.reduce((a, [d, x]) => a + (isWorkday(parseISO(d)) ? x.fraction : 0), 0);
+  const hp = h("div", { class: "panel" },
+    h("div", { class: "hd" }, h("h2", { text: "Days off in " + S.year }),
+      h("span", { class: "spacer" }),
+      h("span", { class: "tiny dim", text: plural(gained, "working day", "working days") + " free — these never count against leave" })));
+  const ht = h("table");
+  ht.append(h("thead", {}, h("tr", {},
+    h("th", { text: "Date" }), h("th", { text: "" }), h("th", { text: "Day off" }),
+    h("th", { text: "Kind" }), h("th", { class: "r", text: "Free" }))));
+  const htb = h("tbody");
+  for (const [d, x] of hol) {
+    const weekend = !isWorkday(parseISO(d));
+    htb.append(h("tr", { style: weekend ? "opacity:.5" : "" },
+      h("td", { class: "num", style: "width:118px", text: fmtDate(d) }),
+      h("td", { class: "num dim", style: "width:52px", text: DOW[mondayIndex(parseISO(d))] }),
+      h("td", {}, x.name, x.de ? h("span", { class: "tiny dim", style: "display:block", text: x.de }) : null),
+      h("td", { class: "tiny dim", text: x.kind === "legal" ? "Gesetzlicher Feiertag" : x.kind === "service" ? "Dienstfreier Tag" : "Added by the team" }),
+      h("td", { class: "r num", text: weekend ? "—" : (x.fraction < 1 ? "½ day" : "1 day") })));
+  }
+  ht.append(htb);
+  hp.append(h("div", { class: "scroll-x" }, ht));
+  hp.append(h("div", { class: "pad tiny dim" },
+    PUBLISHED_YEARS.includes(S.year)
+      ? "Matches the calendar published for State of Fribourg employees for " + S.year + "."
+      : "The State publishes 24 and 31 December separately each year. For " + S.year + " they are an estimate until you set them in Settings."));
+
+  const frag = document.createDocumentFragment();
+  frag.append(panel, op, hp);
+  return frag;
+}
+
+/* ---------- CSV export ---------- */
+function csvEscape(v) {
+  const s = String(v == null ? "" : v);
+  return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+async function exportCSV() {
+  if (!S.downloads) return;
+  const rows = [["Person", "Type", "Start", "End", "Days", "Status", "Note", "Decided by", "Requested"]];
+  for (const r of S.requests.slice().sort((a, b) => a.start.localeCompare(b.start))) {
+    rows.push([memberName(r.memberId), TYPES[r.type].label, r.start, r.end, num(totalDays(r)),
+      r.status, r.note || "", r.decidedBy ? memberName(r.decidedBy) : "", (r.createdAt || "").slice(0, 10)]);
+  }
+  rows.push([]);
+  rows.push(["Overtime", "Person", "Date", "Hours", "Status", "Reason", "Decided by"]);
+  for (const o of S.overtime.slice().sort((a, b) => a.date.localeCompare(b.date))) {
+    rows.push(["", memberName(o.memberId), o.date, o.hours, o.status, o.note || "", o.decidedBy ? memberName(o.decidedBy) : ""]);
+  }
+  rows.push([]);
+  rows.push(["Overtime bank", "Person", "Approved " + S.year, "Pending", "Taken in lieu", "Bank (h)"]);
+  for (const m of activeMembers()) {
+    const y = overtimeInYear(m.id, S.year), all = overtimeBalance(m.id);
+    rows.push(["", memberName(m.id), y.approved, y.pending, y.spent, Math.round(all.left * 100) / 100]);
+  }
+  rows.push([]);
+  rows.push(["Balances " + S.year, "Entitlement", "Carried over", "Taken", "Pending", "Left", "Sick", "Remote"]);
+  for (const m of activeMembers()) {
+    const b = balance(m.id, S.year);
+    rows.push([m.name, num(b.ent), num(b.carry), num(b.taken), num(b.pending), num(b.left), num(b.sick), num(b.remote)]);
+  }
+  const csv = "\ufeff" + rows.map(r => r.map(csvEscape).join(",")).join("\r\n");
+  try {
+    await S.downloads.save({ filename: "leave-" + (S.settings.teamName || "team").replace(/\W+/g, "-").toLowerCase() + "-" + S.year + ".csv", data: csv });
+    toast("Saved");
+  } catch (e) {
+    if (e && e.code === "declined") return;
+    toast("The export couldn’t be saved here.", true);
+  }
+}
+
+/* ============================================================
+   Team
+   ============================================================ */
+function renderTeam() {
+  const frag = document.createDocumentFragment();
+  const editable = canEditTeam();
+  const q = reviewQueue();
+
+  /* ---- things a manager still has to confirm ---- */
+  if (editable && q.total) {
+    const rp = h("div", { class: "panel" });
+    rp.append(h("div", { class: "hd" },
+      h("h2", { text: "Changes to confirm" }),
+      h("span", { class: "spacer" }),
+      h("span", { class: "badge", text: String(q.total) })));
+    const rl = h("div", { class: "mlist" });
+
+    for (const j of q.joiners) {
+      const nm = (S.profiles[j.uid] && S.profiles[j.uid].name) || j.nameHint || "Someone";
+      const em = S.profiles[j.uid] && S.profiles[j.uid].email;
+      rl.append(h("div", { class: "mrow" },
+        avatar(j.uid),
+        h("div", { class: "nm" },
+          h("div", {}, nm, h("span", { class: "dim", text: " asked to join" })),
+          h("div", { class: "tiny dim", text: em || "Opened the tracker and isn’t on the roster yet" })),
+        h("button", {
+          class: "btn sm primary", type: "button", onclick: () => write(async () => {
+            const id = newId("m_");
+            await S.db.doc("members/" + id).set(blankMember({ uid: j.uid, nameHint: nm, source: "request" }));
+            await S.db.doc("joiners/" + j.id).delete();
+          }, "Added " + nm)
+        }, "Add to the team"),
+        h("button", {
+          class: "btn sm ghost", type: "button",
+          onclick: () => write(() => S.db.doc("joiners/" + j.id).delete(), "Dismissed")
+        }, "Dismiss")));
+    }
+
+    for (const m of q.leavers) {
+      rl.append(h("div", { class: "mrow" },
+        avatar(uidOf(m)),
+        h("div", { class: "nm" },
+          h("div", {}, displayName(m), h("span", { class: "dim", text: " no longer appears in your Claude team" })),
+          h("div", { class: "tiny dim", text: "Archiving keeps their past leave in the records but takes them off the timeline." })),
+        h("button", {
+          class: "btn sm", type: "button",
+          onclick: () => write(() => S.db.doc("members/" + m.id).update({ archived: true, leftAt: new Date().toISOString() }), "Archived")
+        }, "Archive"),
+        h("button", {
+          class: "btn sm ghost", type: "button",
+          onclick: () => write(() => S.db.doc("members/" + m.id).update({ keepUnresolved: true }), "Kept")
+        }, "Keep them")));
+    }
+    rp.append(rl);
+    frag.append(rp);
+  }
+
+  /* ---- the roster ---- */
+  const panel = h("div", { class: "panel" });
+  panel.append(h("div", { class: "hd" },
+    h("h2", { text: "Team roster" }),
+    h("span", { class: "spacer" }),
+    yearPicker(),
+    editable ? h("button", { class: "btn sm primary", type: "button", onclick: () => openAddPeople() }, "Add people") : null));
+
+  const list = h("div", { class: "mlist" });
+  const sorted = S.members.slice().sort((a, b) =>
+    Number(a.archived) - Number(b.archived) || displayName(a).localeCompare(displayName(b)));
+  for (const m of sorted) {
+    const b = balance(m.id, S.year);
+    const row = h("div", { class: "mrow", style: m.archived ? "opacity:.55" : "" });
+    const u = uidOf(m);
+    const linked = !!u;
+    const unresolved = linked && S.profiles[u] && S.profiles[u].name === "";
+    row.append(avatar(u));
+    row.append(h("div", { class: "nm" },
+      h("div", {}, displayName(m), m.id === S.memberId ? h("span", { class: "dim", text: " (you)" }) : null),
+      h("div", { class: "tiny dim num", text: num(b.taken) + " taken, " + num(b.left) + " left in " + S.year })));
+    if (m.role === "manager") row.append(h("span", { class: "pill mgr", text: "Approves leave" }));
+    if (m.archived) row.append(h("span", { class: "pill", text: "Archived" }));
+    else if (!linked) row.append(h("span", { class: "pill", title: "Not matched to a Claude account yet", text: "Not linked" }));
+    else if (unresolved) row.append(h("span", { class: "pill", title: "Their Claude profile no longer resolves", text: "Not found" }));
+
+    if (editable) {
+      const ent = h("input", {
+        class: "ent num", type: "number", step: "0.5", min: "0", max: "90",
+        value: String(entitlement(m, S.year)), title: "Vacation days for " + S.year,
+        onchange: async e => {
+          const next = Object.assign({}, m.entitlements || {}); next[S.year] = Number(e.target.value);
+          await write(() => S.db.doc("members/" + m.id).update({ entitlements: next }), "Entitlement updated");
+        }
+      });
+      const carry = h("input", {
+        class: "ent num", type: "number", step: "0.5", min: "-30", max: "60",
+        value: String(carryover(m, S.year)), title: "Days carried over into " + S.year,
+        onchange: async e => {
+          const next = Object.assign({}, m.carryover || {}); next[S.year] = Number(e.target.value);
+          await write(() => S.db.doc("members/" + m.id).update({ carryover: next }), "Carry-over updated");
+        }
+      });
+      row.append(h("label", { class: "tiny dim", style: "display:flex;gap:6px;align-items:center" }, "Days", ent));
+      row.append(h("label", { class: "tiny dim", style: "display:flex;gap:6px;align-items:center" }, "Carried", carry));
+      row.append(h("button", {
+        class: "btn sm ghost", type: "button", onclick: () => write(() =>
+          S.db.doc("members/" + m.id).update({ role: m.role === "manager" ? "member" : "manager" }),
+          m.role === "manager" ? "No longer approves leave" : "Can now approve leave")
+      }, m.role === "manager" ? "Remove approver" : "Make approver"));
+      row.append(h("button", { class: "btn sm ghost", type: "button", onclick: () => renameMember(m) },
+        m.name ? "Edit name" : linked ? "Override name" : "Rename"));
+      row.append(h("button", {
+        class: "btn sm ghost", type: "button", onclick: () => write(() =>
+          S.db.doc("members/" + m.id).update({ archived: !m.archived, keepUnresolved: false }),
+          m.archived ? "Restored" : "Archived")
+      }, m.archived ? "Restore" : "Archive"));
+    }
+    list.append(row);
+  }
+  panel.append(list);
+  if (editable) panel.append(h("div", { class: "pad tiny dim" },
+    "Pull people out of your Claude team, or type them in by hand — ",
+    h("button", { class: "btn sm ghost", style: "padding:1px 6px", type: "button", onclick: () => openAddPeople() }, "add people"),
+    "."));
+  if (!editable) panel.append(h("div", { class: "pad tiny dim", text: "Only a manager can change the roster." }));
+  if (!managerCount()) panel.append(h("div", { class: "pad small", style: "color:var(--warn)" },
+    "Nobody can approve leave yet. Mark at least one person as an approver, or long requests will sit unanswered."));
+  frag.append(panel);
+
+  return frag;
+}
+
+function avatar(uid) {
+  const p = uid && S.profiles[uid];
+  const src = p && p.avatarUrl;
+  if (!src) return h("span", {
+    style: "width:26px;height:26px;border-radius:50%;flex:0 0 auto;background:var(--surface-3)"
+  });
+  return h("img", { src, alt: "", width: 26, height: 26, loading: "lazy", style: "border-radius:50%;flex:0 0 auto" });
+}
+
+/* ============================================================
+   Importing people from the Claude team
+   ============================================================ */
+/* One place to add anyone: search the Claude team, sweep the directory,
+   or just type names in. */
+function openAddPeople(which) {
+  let tab = which || (S.user ? "team" : "name");
+
+  const segTeam = h("button", { type: "button", onclick: () => show("team") }, "From your Claude team");
+  const segName = h("button", { type: "button", onclick: () => show("name") }, "By name");
+  const seg = h("div", { class: "seg", style: "margin-bottom:14px" }, segTeam, segName);
+
+  /* --- search pane --- */
+  const input = h("input", { type: "text", placeholder: "Search your Claude team by name" });
+  const results = h("div", { class: "mlist", style: "max-height:38vh;overflow-y:auto;margin:12px -18px 0;border-top:1px solid var(--line)" });
+  const status = h("div", { class: "tiny dim", style: "margin-top:10px" });
+  let token = 0;
+  async function runSearch() {
+    if (!S.user) return;
+    const mine = ++token;
+    let hits = [];
+    try { hits = await S.user.search(input.value); } catch (e) { hits = []; }
+    if (mine !== token) return;
+    paint(hits, input.value);
+  }
+  let directoryAnswered = false;
+  function paint(hits, q) {
+    clear(results);
+    if (hits.length) directoryAnswered = true;
+    const onRoster = new Set(S.members.map(uidOf).filter(Boolean));
+    if (!hits.length) {
+      if (q) {
+        results.append(h("div", { class: "pad tiny dim" },
+          "Nobody in your Claude team matched that. ",
+          h("button", { class: "btn sm", type: "button", onclick: () => show("name", q.trim()) }, "Add by name instead")));
+      } else if (!directoryAnswered) {
+        results.append(h("div", { class: "pad" },
+          h("strong", { class: "small", style: "display:block;margin-bottom:4px" }, "No Claude team directory here"),
+          h("span", { class: "tiny dim" },
+            "This account isn’t in a Claude organization that shares its member list, so there is nobody to import. Everything else works the same — put the group in by name."),
+          h("div", { style: "margin-top:10px" },
+            h("button", { class: "btn sm primary", type: "button", onclick: () => show("name") }, "Add people by name"))));
+      } else {
+        results.append(h("div", { class: "pad tiny dim", text: "Start typing a name." }));
+      }
+      return;
+    }
+    for (const p of hits) {
+      const isMe = p.id === S.uid;
+      const row = h("div", { class: "mrow" }, avatarFor(p),
+        h("div", { class: "nm" },
+          h("div", {}, p.name || "Someone", isMe ? h("span", { class: "dim", text: " (you)" }) : null),
+          p.email ? h("div", { class: "tiny dim", text: p.email }) : null));
+      if (onRoster.has(p.id)) row.append(h("span", { class: "pill", text: isMe ? "That’s you" : "On the team" }));
+      else row.append(h("button", {
+        class: "btn sm primary", type: "button",
+        onclick: () => addFromDirectory(p).then(runSearch)
+      }, "Add"));
+      results.append(row);
+    }
+  }
+  input.addEventListener("input", runSearch);
+
+  const paneTeam = h("div", {}, input, results, status);
+
+  /* --- by-name pane --- */
+  const names = h("textarea", { placeholder: "Anja Brunner\nPierre Chassot\nTomás Reyes", style: "min-height:140px" });
+  const paneName = h("div", {},
+    h("p", { class: "muted small", style: "margin:0 0 8px" },
+      "One name per line. Anyone added this way can still tap “That’s me” when they open the tracker, which links their Claude account from then on."),
+    names);
+
+  /* --- footer action switches with the pane --- */
+  const act = h("button", { class: "btn primary", type: "button" });
+
+  async function scan() {
+    if (S.scanning || !S.user) return;
+    S.scanning = true; act.disabled = true;
+    const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+    const found = new Map();
+    for (let i = 0; i < letters.length; i++) {
+      status.textContent = "Sweeping the directory… " + Math.round((i / letters.length) * 100) + "%";
+      let hits = [];
+      try { hits = await S.user.search(letters[i]); } catch (e) { hits = []; }
+      for (const p of hits) if (p && p.id && p.name) found.set(p.id, p);
+    }
+    S.scanning = false; act.disabled = false; status.textContent = "";
+    const people = [...found.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const onRoster = new Set(S.members.map(uidOf).filter(Boolean));
+    if (!people.length) {
+      paint([], "");
+      toast("No Claude team directory for this account — add people by name.", true);
+      return;
+    }
+    if (people.every(p => onRoster.has(p.id))) {
+      toast(people.length === 1
+        ? "The directory only returned you, and you’re already on the roster."
+        : "Everyone the directory returned is already on the roster.");
+      return;
+    }
+    openImport(people);
+  }
+
+  async function addTyped() {
+    const have = new Set(S.members.map(m => displayName(m).toLowerCase()));
+    const list = names.value.split("\n").map(x => x.trim()).filter(Boolean)
+      .filter((n, i, all) => all.indexOf(n) === i && !have.has(n.toLowerCase()));
+    if (!list.length) { toast("Everyone on that list is already on the roster."); return; }
+    act.disabled = true;
+    let added = 0;
+    for (const n of list) {
+      const id = newId("m_");
+      const ok = await write(() => S.db.doc("members/" + id).set(blankMember({ name: n })));
+      if (ok) added++; else break;
+    }
+    act.disabled = false;
+    names.value = "";
+    toast(added ? "Added " + added + (added === 1 ? " person" : " people") : "Nobody was added");
+  }
+
+  function show(next, seedName) {
+    tab = next;
+    segTeam.setAttribute("aria-pressed", String(tab === "team"));
+    segName.setAttribute("aria-pressed", String(tab === "name"));
+    paneTeam.style.display = tab === "team" ? "" : "none";
+    paneName.style.display = tab === "name" ? "" : "none";
+    clear(act);
+    if (tab === "team") { act.textContent = "Sweep the whole directory"; act.onclick = scan; }
+    else { act.textContent = "Add them"; act.onclick = addTyped; }
+    if (seedName) names.value = seedName;
+    setTimeout(() => (tab === "team" ? input : names).focus(), 20);
+  }
+
+  const body = h("div", {},
+    S.user ? seg : null,
+    paneTeam, paneName,
+    h("p", { class: "tiny dim", style: "margin:14px 0 0" },
+      "Claude offers a search over your team, never a full list, so the sweep goes letter by letter and can miss someone. Nothing is added until you confirm it."));
+
+  modal("Add people to the team", body,
+    [h("span", { class: "spacer" }),
+      h("button", { class: "btn", type: "button", onclick: closeModal }, "Done"), act]);
+  show(tab);
+  if (S.user) runSearch();
+}
+
+function avatarFor(p) {
+  if (!p || !p.avatarUrl) return h("span", { style: "width:26px;height:26px;border-radius:50%;flex:0 0 auto;background:var(--surface-3)" });
+  return h("img", { src: p.avatarUrl, alt: "", width: 26, height: 26, loading: "lazy", style: "border-radius:50%;flex:0 0 auto" });
+}
+
+function addFromDirectory(p) {
+  const id = newId("m_");
+  return write(() => S.db.doc("members/" + id).set(blankMember({
+    uid: p.id, nameHint: p.name || "", source: "directory"
+  })), "Added " + (p.name || "them"));
+}
+
+/** Confirm sheet after a directory scan. */
+function openImport(people) {
+  const onRoster = new Set(S.members.map(uidOf).filter(Boolean));
+  const fresh = people.filter(p => !onRoster.has(p.id));
+  const picked = new Set(fresh.map(p => p.id));
+  const list = h("div", { style: "max-height:46vh;overflow-y:auto;margin:0 -18px" });
+  const go = h("button", { class: "btn primary", type: "button" });
+
+  function label() {
+    go.textContent = picked.size ? "Add " + picked.size + (picked.size === 1 ? " person" : " people") : "Add nobody";
+    go.disabled = !picked.size;
+  }
+  for (const p of people) {
+    const already = onRoster.has(p.id);
+    const cb = h("input", { type: "checkbox" });
+    cb.checked = !already; cb.disabled = already;
+    cb.addEventListener("change", () => { cb.checked ? picked.add(p.id) : picked.delete(p.id); label(); });
+    list.append(h("label", { class: "mrow", style: "cursor:pointer" }, cb, avatarFor(p),
+      h("div", { class: "nm" }, h("div", { text: p.name }),
+        p.email ? h("div", { class: "tiny dim", text: p.email }) : null),
+      already ? h("span", { class: "pill", text: "Already on the team" }) : null));
+  }
+  label();
+
+  go.addEventListener("click", async () => {
+    go.disabled = true;
+    let added = 0;
+    for (const p of fresh) {
+      if (!picked.has(p.id)) continue;
+      const id = newId("m_");
+      const ok = await write(() => S.db.doc("members/" + id).set(blankMember({
+        uid: p.id, nameHint: p.name || "", source: "directory"
+      })));
+      if (ok) added++;
+    }
+    closeModal();
+    toast(added ? "Added " + added + (added === 1 ? " person" : " people") : "Nobody was added");
+  });
+
+  modal("Found " + people.length + " in your Claude team",
+    h("div", {},
+      h("p", { class: "muted small", style: "margin:0 0 10px" },
+        "Everyone the directory would show. Untick anyone who isn’t in the Physics Team — students and collaborators from other groups will be in here too."),
+      list),
+    [h("span", { class: "spacer" }),
+      h("button", { class: "btn", type: "button", onclick: closeModal }, "Cancel"), go]);
+}
+
+function addMember() { openAddPeople("name"); }
+
+function renameMember(m) {
+  askModal({
+    title: uidOf(m) ? "Override the name" : "Rename",
+    text: uidOf(m) ? "Leave this empty to follow their Claude profile instead." : "",
+    label: "Full name", value: m.name || displayName(m), ok: "Save", required: !uidOf(m),
+    onOk: (name) => write(() => S.db.doc("members/" + m.id).update({ name: name }), name ? "Renamed" : "Following their Claude profile")
+  });
+}
+
+/* ============================================================
+   Settings
+   ============================================================ */
+function renderSettings() {
+  const frag = document.createDocumentFragment();
+  const s = S.settings;
+
+  const teamIn = h("input", { type: "text", value: s.teamName || "" });
+  const daysIn = h("input", { type: "number", min: "0", max: "90", step: "0.5", value: String(s.defaultDays) });
+  const thrIn = h("input", { type: "number", min: "0", max: "30", step: "0.5", value: String(s.approvalThreshold) });
+  const hpdIn = h("input", { type: "number", min: "1", max: "14", step: "0.1", value: String(hoursPerDay()) });
+  const wd = h("div", { style: "display:flex;gap:14px;flex-wrap:wrap;margin-top:2px" });
+  const wdBoxes = [];
+  [["Mon", 1], ["Tue", 2], ["Wed", 3], ["Thu", 4], ["Fri", 5], ["Sat", 6], ["Sun", 0]].forEach(([lbl, v]) => {
+    const cb = h("input", { type: "checkbox", value: v });
+    cb.checked = s.workdays.includes(v);
+    wdBoxes.push([cb, v]);
+    wd.append(h("label", { class: "check", style: "margin:0" }, cb, h("span", { text: lbl })));
+  });
+
+  const save = h("button", { class: "btn primary", type: "button" }, "Save settings");
+  save.addEventListener("click", async () => {
+    const workdays = wdBoxes.filter(([cb]) => cb.checked).map(([, v]) => v);
+    if (!workdays.length) { toast("Pick at least one working day.", true); return; }
+    save.disabled = true;
+    await saveSettings({
+      teamName: teamIn.value.trim() || DEFAULTS.teamName,
+      defaultDays: Number(daysIn.value) || 0,
+      approvalThreshold: Number(thrIn.value) || 0,
+      hoursPerDay: Number(hpdIn.value) || DEFAULTS.hoursPerDay,
+      workdays
+    });
+    save.disabled = false;
+  });
+
+  frag.append(h("div", { class: "panel" },
+    h("div", { class: "hd" }, h("h2", { text: "How this team works" })),
+    h("div", { class: "pad" },
+      h("label", { class: "field" }, h("span", { text: "Team name" }), teamIn),
+      h("div", { class: "row2" },
+        h("label", { class: "field" }, h("span", { text: "Default vacation days per year" }), daysIn),
+        h("label", { class: "field" }, h("span", { text: "Days bookable without approval" }), thrIn)),
+      h("p", { class: "tiny dim", style: "margin:-6px 0 14px" },
+        "Vacation and time off in lieu longer than " + num(s.approvalThreshold) + " working days go to an approver. Sick leave and remote days are logged directly, and every overtime entry needs approval whatever its size."),
+      h("label", { class: "field" }, h("span", { text: "Hours in a full working day" }), hpdIn),
+      h("p", { class: "tiny dim", style: "margin:-6px 0 14px" },
+        "Used to turn banked overtime into days off in lieu. The State of Fribourg contracts 42 h a week at 100 %, which is 8.4 h over five days."),
+      h("label", { class: "field", style: "margin-bottom:4px" }, h("span", { text: "Working days" })), wd,
+      h("div", { style: "margin-top:16px" }, save))));
+
+  /* holidays */
+  const holPanel = h("div", { class: "panel" });
+  holPanel.append(h("div", { class: "hd" },
+    h("h2", { text: "Days off, as the State of Fribourg sets them" }),
+    h("span", { class: "spacer" }),
+    yearPicker()));
+
+  const e = easter(S.year);
+  const ye = yearEndFor(S.year);
+  function holRow(def) {
+    const d = def.fixed ? new Date(Date.UTC(S.year, def.fixed[0] - 1, def.fixed[1])) : addDays(e, def.easter);
+    const on = s.holidays.includes(def.key);
+    const cb = h("input", { type: "checkbox" });
+    cb.checked = on;
+    cb.addEventListener("change", async () => {
+      const set = new Set(s.holidays);
+      if (cb.checked) set.add(def.key); else set.delete(def.key);
+      await saveSettings({ holidays: [...set] });
+    });
+    const line = [def.de, fmtShort(iso(d)) + " " + S.year];
+    if (def.fraction === 0.5) line.push("afternoon only");
+    const wrap = h("label", { class: "check" }, cb,
+      h("span", {}, def.name,
+        h("span", { class: "tiny dim", style: "display:block", text: line.join(", ") })));
+    if (def.yearly) {
+      const sel = h("select", { style: "width:auto;margin-left:auto;font-size:12.5px;padding:3px 6px" });
+      [["0", "not free"], ["0.5", "afternoon"], ["1", "full day"]].forEach(([v, lbl]) => {
+        const o = h("option", { value: v, text: lbl });
+        if (Number(v) === Number(ye[def.key] || 0)) o.selected = true;
+        sel.append(o);
+      });
+      sel.addEventListener("change", async () => {
+        const next = Object.assign({}, s.yearEnd || {});
+        next[S.year] = Object.assign({}, YEAR_END[S.year] || YEAR_END_FALLBACK, next[S.year] || {});
+        next[S.year][def.key] = Number(sel.value);
+        await saveSettings({ yearEnd: next });
+      });
+      wrap.style.alignItems = "center";
+      wrap.append(sel);
+    }
+    return wrap;
+  }
+
+  const legalGrid = h("div", { class: "hol-grid" });
+  HOLIDAY_DEFS.filter(d => d.kind === "legal").forEach(d => legalGrid.append(holRow(d)));
+  const svcGrid = h("div", { class: "hol-grid" });
+  HOLIDAY_DEFS.filter(d => d.kind === "service").forEach(d => svcGrid.append(holRow(d)));
+
+  holPanel.append(h("div", { class: "pad" },
+    h("h3", { class: "small", style: "margin-bottom:8px" }, "Gesetzliche Feiertage",
+      h("span", { class: "tiny dim", style: "font-weight:400" }, " — the nine fixed in cantonal law")),
+    legalGrid,
+    h("h3", { class: "small", style: "margin:20px 0 8px" }, "Dienstfreie Tage",
+      h("span", { class: "tiny dim", style: "font-weight:400" }, " — granted on top, and reset every year")),
+    svcGrid,
+    h("p", { class: "tiny dim", style: "margin:16px 0 0" },
+      PUBLISHED_YEARS.includes(S.year)
+        ? "Set from the calendar the Amt für Personal und Organisation published for " + S.year + " (fr.ch). In " + S.year + ", " + (yearEndFor(S.year).dec24 === 0.5 ? "24 December is a free afternoon" : yearEndFor(S.year).dec24 ? "24 December is a full day off" : "24 December is a normal working day") + " and " + (yearEndFor(S.year).dec31 ? "31 December is free" : "31 December is a normal working day") + "."
+        : "The State hasn’t published " + S.year + " here yet — 24 and 31 December are carried over as a guess. Set them above once fr.ch publishes the year."),
+    h("p", { class: "tiny dim", style: "margin:6px 0 0" },
+      "If your group follows a different employer’s calendar, switch any of these off.")));
+
+  /* custom closures */
+  const custom = h("div", { class: "mlist" });
+  const yearCustom = s.customHolidays.filter(c => yearOf(c.date) === S.year).sort((a, b) => a.date.localeCompare(b.date));
+  for (const c of yearCustom) {
+    custom.append(h("div", { class: "mrow" },
+      h("span", { class: "num", style: "width:110px", text: fmtDate(c.date) }),
+      h("span", { class: "nm", text: c.name }),
+      h("span", { class: "pill", text: c.half ? "Half day" : "Full day" }),
+      h("button", {
+        class: "btn sm ghost", type: "button", onclick: () => saveSettings({
+          customHolidays: s.customHolidays.filter(x => !(x.date === c.date && x.name === c.name))
+        })
+      }, "Remove")));
+  }
+  const cDate = h("input", { type: "date", value: S.year + "-12-24" });
+  const cName = h("input", { type: "text", placeholder: "Reason, e.g. institute closure" });
+  const cHalf = h("input", { type: "checkbox" });
+  custom.append(h("div", { class: "mrow" },
+    h("div", { style: "width:160px" }, cDate),
+    h("div", { class: "nm" }, cName),
+    h("label", { class: "check", style: "margin:0" }, cHalf, h("span", { text: "Half day" })),
+    h("button", {
+      class: "btn sm", type: "button", onclick: async () => {
+        if (!cDate.value) return;
+        await saveSettings({
+          customHolidays: s.customHolidays.concat([{
+            date: cDate.value, name: cName.value.trim() || "Office closed", half: cHalf.checked
+          }])
+        });
+      }
+    }, "Add day off")));
+  holPanel.append(h("div", { class: "hd", style: "border-top:1px solid var(--line)" },
+    h("h2", { text: "Days your group adds in " + S.year })));
+  holPanel.append(custom);
+  frag.append(holPanel);
+
+  frag.append(h("div", { class: "panel" },
+    h("div", { class: "hd" }, h("h2", { text: "About this tracker" })),
+    h("div", { class: "pad small muted" },
+      h("p", { style: "margin-top:0" }, "Everyone who can open this artifact sees the whole team’s absences. Balances are worked out live from the requests list, so correcting a request corrects the balance."),
+      h("p", {}, "Sick leave and remote days are recorded but never deducted from vacation. Approved overtime banks up as hours and comes back out as time off in lieu."),
+      h("p", {}, "The roster and these settings can only be changed by the artifact’s owner and by anyone given Editor access in the share menu. Everyone at Contributor can book their own leave, and approvers confirm the longer requests."),
+      h("p", { style: "margin-bottom:0" }, "Days off follow the calendar the Amt für Personal und Organisation publishes for State of Fribourg employees at ",
+        h("a", { href: "https://www.fr.ch/de/arbeit-und-unternehmen/arbeiten-beim-staat/kalender-arbeitszeiten-und-weisen", target: "_blank", rel: "noopener" }, "fr.ch"),
+        ". Half days such as 1 May and, in some years, 24 December cost half a day of leave, not a whole one."))));
+  return frag;
+}
+
+/* ============================================================
+   Booking
+   ============================================================ */
+function closeModal() { clear($("#modalHost")); document.removeEventListener("keydown", escClose); }
+function modal(title, bodyEl, footEl) {
+  const host = $("#modalHost"); clear(host);
+  const scrim = h("div", { class: "scrim", onclick: e => { if (e.target === scrim) closeModal(); } });
+  const box = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": title },
+    h("div", { class: "hd" }, h("h2", { text: title }), h("span", { class: "spacer" }),
+      h("button", { class: "btn sm ghost", type: "button", "aria-label": "Close", onclick: closeModal }, "✕")),
+    h("div", { class: "bd" }, bodyEl),
+    footEl ? h("div", { class: "ft" }, footEl) : null);
+  scrim.append(box);
+  host.append(scrim);
+  document.addEventListener("keydown", escClose);
+  const first = box.querySelector(".bd select,.bd input,.bd textarea,.bd button") ||
+                box.querySelector(".ft .btn.primary,.ft .btn.danger");
+  if (first) setTimeout(() => first.focus(), 30);
+}
+function escClose(e) { if (e.key === "Escape") closeModal(); }
+
+/**
+ * One small dialog for confirmations and single-field questions.
+ * Replaces window.prompt/confirm, which browsers block inside artifacts.
+ */
+function askModal(o) {
+  const input = !o.label ? null
+    : o.multiline
+      ? h("textarea", { placeholder: o.placeholder || "", style: "min-height:124px" })
+      : h("input", { type: "text", value: o.value || "", placeholder: o.placeholder || "" });
+  if (input && o.multiline && o.value) input.value = o.value;
+  const body = h("div", {},
+    o.text ? h("p", { class: "muted small", style: "margin:0 0 4px", text: o.text }) : null,
+    input ? h("label", { class: "field", style: "margin-bottom:0" }, h("span", { text: o.label }), input) : null);
+  const go = h("button", { class: "btn " + (o.danger ? "danger" : "primary"), type: "button" }, o.ok || "OK");
+  const run = async () => {
+    const v = input ? input.value.trim() : "";
+    if (o.required && !v) { input.focus(); return; }
+    go.disabled = true;
+    try { await o.onOk(v); } finally { go.disabled = false; }
+    closeModal();
+  };
+  go.addEventListener("click", run);
+  if (input && !o.multiline) input.addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+  modal(o.title, body, [h("span", { class: "spacer" }),
+    h("button", { class: "btn", type: "button", onclick: closeModal }, "Back"), go]);
+}
+
+function openBooking(startISO) {
+  if (!S.memberId) return;
+  const start = startISO || todayISO();
+  const forSel = h("select", {});
+  for (const m of activeMembers()) {
+    const o = h("option", { value: m.id, text: m.name + (m.id === S.memberId ? " (you)" : "") });
+    if (m.id === S.memberId) o.selected = true;
+    forSel.append(o);
+  }
+  const typeSeg = h("div", { class: "seg" });
+  let type = "vacation";
+  const typeBtns = {};
+  for (const k of Object.keys(TYPES)) {
+    const b = h("button", { type: "button", onclick: () => { type = k; for (const j in typeBtns) typeBtns[j].setAttribute("aria-pressed", String(j === k)); recalc(); } }, TYPES[k].short || TYPES[k].label);
+    b.setAttribute("aria-pressed", String(k === type));
+    typeBtns[k] = b; typeSeg.append(b);
+  }
+  const startIn = h("input", { type: "date", value: start, oninput: () => { if (endIn.value < startIn.value) endIn.value = startIn.value; recalc(); } });
+  const endIn = h("input", { type: "date", value: start, oninput: recalc });
+  const halfA = h("input", { type: "checkbox", onchange: recalc });
+  const halfB = h("input", { type: "checkbox", onchange: recalc });
+  const amBtn = h("button", { type: "button" }, "Morning");
+  const pmBtn = h("button", { type: "button" }, "Afternoon");
+  let period = "am";
+  amBtn.addEventListener("click", () => { period = "am"; recalc(); });
+  pmBtn.addEventListener("click", () => { period = "pm"; recalc(); });
+  const periodSeg = h("div", { class: "seg", style: "max-width:230px;margin:-2px 0 10px 26px" }, amBtn, pmBtn);
+  const halfARow = h("label", { class: "check" }, halfA, h("span", { text: "Half day" }));
+  const halfBRow = h("label", { class: "check" }, halfB, h("span", { text: "Last day is a half day" }));
+  const note = h("textarea", { placeholder: "Anything the team should know (optional)" });
+  const calc = h("div", { class: "calc" });
+  const submit = h("button", { class: "btn primary", type: "button" }, "Book");
+
+  function draft() {
+    return {
+      memberId: forSel.value, type,
+      start: startIn.value, end: endIn.value,
+      halfStart: halfA.checked, halfEnd: halfB.checked && startIn.value !== endIn.value,
+      halfPeriod: (halfA.checked && startIn.value === endIn.value) ? period : null
+    };
+  }
+  function recalc() {
+    const d = draft();
+    const single = d.start === d.end;
+    halfARow.querySelector("span").textContent = single ? "Half day" : "First day is a half day (you leave at midday)";
+    halfBRow.style.display = single ? "none" : "";
+    halfBRow.querySelector("span").textContent = "Last day is a half day (you are back at midday)";
+    periodSeg.style.display = (single && halfA.checked) ? "" : "none";
+    amBtn.setAttribute("aria-pressed", String(period === "am"));
+    pmBtn.setAttribute("aria-pressed", String(period === "pm"));
+    clear(calc);
+    if (!d.start || !d.end || d.end < d.start) {
+      calc.append(h("span", { class: "bad", text: "The end date is before the start date." }));
+      submit.disabled = true; return;
+    }
+    const days = totalDays(d);
+    const closed = [], halves = [];
+    let x = parseISO(d.start);
+    const end = parseISO(d.end);
+    while (x <= end) {
+      const s = iso(x);
+      const hh = isWorkday(x) ? holiday(s) : null;
+      if (hh) (hh.fraction >= 1 ? closed : halves).push(hh.name);
+      x = addDays(x, 1);
+    }
+    if (days <= 0) {
+      calc.append(h("span", { class: "bad", text: "That range has no working days in it." }));
+      submit.disabled = true; return;
+    }
+    submit.disabled = false;
+    calc.append(h("div", {}, "This uses ", h("b", { text: num(days) }), days === 1 ? " working day" : " working days",
+      TYPES[type].deducts ? "" : TYPES[type].spendsOvertime ? " from your overtime bank" : " and does not touch the vacation balance", "."));
+    if (closed.length) calc.append(h("span", { class: "tiny dim", style: "display:block;margin-top:4px" },
+      "Free anyway: " + [...new Set(closed)].join(", ")));
+    if (halves.length) calc.append(h("span", { class: "tiny dim", style: "display:block;margin-top:4px" },
+      "Counted as a half day: " + [...new Set(halves)].join(", ") + " — the State already gives the afternoon."));
+    const b = balance(d.memberId, yearOf(d.start));
+    if (TYPES[type].spendsOvertime) {
+      const bank = overtimeBalance(d.memberId);
+      const cost = days * hoursPerDay();
+      const after = bank.left - cost;
+      calc.append(h("span", { class: after < 0 ? "bad" : "tiny dim", style: "display:block;margin-top:4px" },
+        after < 0
+          ? "That costs " + fmtHours(cost) + ", and only " + fmtHours(bank.left) + " is banked."
+          : "Costs " + fmtHours(cost) + " of the " + fmtHours(bank.left) + " banked, leaving " + fmtHours(after) + "."));
+      if (!bank.banked) calc.append(h("span", { class: "warn" }, "No approved overtime yet — log the hours first and have them approved."));
+    }
+    if (TYPES[type].deducts) {
+      const left = b.left - days;
+      calc.append(h("span", { class: left < 0 ? "bad" : "tiny dim", style: "display:block;margin-top:4px" },
+        left < 0 ? "That is " + num(-left) + " more than " + memberName(d.memberId) + " has left this year."
+          : num(left) + " vacation days would remain in " + yearOf(d.start) + "."));
+    }
+    const clash = S.requests.filter(r => r.memberId !== d.memberId && r.status !== "rejected" && r.status !== "cancelled" && overlaps(r, d));
+    if (clash.length) calc.append(h("span", { class: "warn" },
+      "Also away then: " + [...new Set(clash.map(r => memberName(r.memberId)))].join(", ")));
+    if (needsApproval(Object.assign({}, d, { type }))) {
+      calc.append(h("span", { class: "warn" }, "Longer than " + num(S.settings.approvalThreshold) + " days, so it goes to a manager for approval."));
+    }
+    submit.textContent = needsApproval(Object.assign({}, d, { type })) ? "Send for approval" : "Book";
+  }
+
+  submit.addEventListener("click", async () => {
+    const d = draft();
+    if (!d.start || !d.end || totalDays(d) <= 0) return;
+    const auto = !needsApproval(d);
+    const id = newId("r_");
+    submit.disabled = true;
+    const ok = await write(() => S.db.doc("requests/" + id).set(Object.assign({}, d, {
+      note: note.value.trim(),
+      status: auto ? "approved" : "pending",
+      autoApproved: auto,
+      createdBy: S.memberId,
+      createdAt: new Date().toISOString(),
+      decidedBy: null, decidedAt: null, decisionNote: ""
+    })), auto ? "Booked" : "Sent to a manager");
+    submit.disabled = false;
+    if (ok) closeModal();
+  });
+
+  const body = h("div", {},
+    activeMembers().length > 1 && amManager()
+      ? h("label", { class: "field" }, h("span", { text: "Who is away" }), forSel)
+      : null,
+    h("label", { class: "field" }, h("span", { text: "Type" }), typeSeg),
+    h("div", { class: "row2" },
+      h("label", { class: "field" }, h("span", { text: "From" }), startIn),
+      h("label", { class: "field" }, h("span", { text: "To" }), endIn)),
+    halfARow, periodSeg, halfBRow,
+    calc,
+    h("label", { class: "field" }, h("span", { text: "Note" }), note));
+  modal("Book time away", body, [h("span", { class: "spacer" }),
+    h("button", { class: "btn", type: "button", onclick: closeModal }, "Cancel"), submit]);
+  recalc();
+}
+
+/* ---------- request detail ---------- */
+function openRequest(id) {
+  const r = S.requests.find(x => x.id === id);
+  if (!r) return;
+  const days = totalDays(r);
+  const body = h("div", {},
+    h("div", { style: "display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px" },
+      h("span", { class: "chip " + r.type }, h("span", { class: "dot" }), TYPES[r.type].label), statusChip(r)),
+    h("div", { class: "num", style: "font-size:17px;font-weight:600" , text: fmtRange(r.start, r.end) }),
+    h("div", { class: "muted small num", style: "margin-top:2px", text: plural(days, "working day", "working days") +
+      (r.halfStart && r.start === r.end
+        ? (r.halfPeriod === "pm" ? " — afternoon" : " — morning")
+        : (r.halfStart || r.halfEnd ? " (includes a half day)" : "")) }),
+    h("table", { style: "margin-top:14px" }, h("tbody", {},
+      h("tr", {}, h("td", { class: "muted", style: "width:42%" }, "Person"), h("td", { text: memberName(r.memberId) })),
+      h("tr", {}, h("td", { class: "muted" }, "Requested"), h("td", { class: "num", text: (r.createdAt || "").slice(0, 10) || "—" })),
+      r.createdBy && r.createdBy !== r.memberId
+        ? h("tr", {}, h("td", { class: "muted" }, "Entered by"), h("td", { text: memberName(r.createdBy) })) : null,
+      r.decidedBy ? h("tr", {}, h("td", { class: "muted" }, "Decided by"),
+        h("td", { text: memberName(r.decidedBy) + " on " + (r.decidedAt || "").slice(0, 10) })) : null)),
+    r.note ? h("div", { class: "note", style: "margin-top:12px", text: r.note }) : null,
+    r.decisionNote ? h("div", { class: "note", style: "margin-top:8px", text: "Manager: " + r.decisionNote }) : null);
+
+  const foot = [h("span", { class: "spacer" })];
+  const mine = r.memberId === S.memberId;
+  if (amManager() && r.status === "pending" && (!mine || managerCount() <= 1 || S.isOwner)) {
+    foot.push(h("button", { class: "btn danger", type: "button", onclick: async () => { await decide(r, "rejected"); closeModal(); } }, "Decline"));
+    foot.push(h("button", { class: "btn primary", type: "button", onclick: async () => { await decide(r, "approved"); closeModal(); } }, "Approve"));
+  } else if ((mine || amManager()) && r.status !== "cancelled") {
+    foot.push(h("button", { class: "btn", type: "button", onclick: () => cancelRequest(r) }, "Cancel this leave"));
+  }
+  foot.push(h("button", { class: "btn ghost", type: "button", onclick: closeModal }, "Close"));
+  modal("Leave details", body, foot);
+}
+
+/* ============================================================
+   Go
+   ============================================================ */
+boot().catch(e => { console.error(e); fail("Something went wrong while loading. Reload the page."); });
+
+</script>
+</body>
+</html>
