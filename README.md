@@ -1,7 +1,7 @@
 # SMP Physics Team — Leave (v2)
 
 The team's leave and absence tracker, hosted as a claude.ai artifact
-(`https://claude.ai/artifact/HCnVJmQLaV4MuEcBbsE66i`). Vite + React + TypeScript,
+(link shared privately within the team). Vite + React + TypeScript,
 built into one self-contained HTML page. There is no server: the artifact's
 built-in database is the backend, and its **access rules** are the
 authorization layer (`src/platform/capabilities.ts`).
@@ -68,7 +68,7 @@ field. See `PLAN.md` §5b–5c for the reasoning and the reviewers' findings.
 ## Publishing
 
 1. `npm run check` (all green).
-2. Publish `dist/artifact.html` to the artifact URL with the capabilities in
+2. Publish `dist/artifact.html` to the tracker's artifact with the capabilities in
    `dist/capabilities.json`.
 3. Migration from v1 is idempotent (`src/platform/migrate.ts`, v1 ids are kept);
    rollback = republish the v1 page with its old capabilities and, if v2 bookings

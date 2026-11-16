@@ -1,6 +1,6 @@
 # SMP Leave tracker — v2 rewrite plan
 
-Rewrite of the claude.ai artifact `https://claude.ai/artifact/HCnVJmQLaV4MuEcBbsE66i`
+Rewrite of the team's claude.ai leave-tracker artifact
 (currently one 2,521-line vanilla-JS HTML file) as a Vite + React + TypeScript
 app, still hosted as a claude.ai artifact, with the artifact's built-in `db`
 capability as the backend and its **access rules** as the server-side
