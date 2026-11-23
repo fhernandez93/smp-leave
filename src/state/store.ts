@@ -179,13 +179,19 @@ export function displayName(s: Pick<State, "profiles">, m: Member | null | undef
   return m.nameHint || "Someone";
 }
 
+/** How each person's vacation ended in every completely archived year (carried into the next). */
+function yearEndsOf(s: State): Map<number, Record<string, number>> {
+  const before = s.settings.archivedBefore;
+  return new Map(s.archive.filter((a) => a.complete && before != null && a.year < before).map((a) => [a.year, a.vacLeft]));
+}
+
 export function derive(s: State): Derived {
   if (derivedMemo && derivedMemo.state === s) return derivedMemo.d;
   if (!calMemo || calMemo.settings !== s.settings) calMemo = { settings: s.settings, cal: new Calendar(s.settings) };
   const cal = calMemo.cal;
-  const key = [cal, s.members, s.links, s.ledgers, s.decisions, s.today];
+  const key = [cal, s.members, s.links, s.ledgers, s.decisions, s.today, s.archive];
   if (!modelMemo || modelMemo.key.some((k, i) => k !== key[i])) {
-    modelMemo = { key, model: buildModel({ cal, members: s.members, links: s.links, ledgers: s.ledgers, decisions: s.decisions, today: s.today }) };
+    modelMemo = { key, model: buildModel({ cal, members: s.members, links: s.links, ledgers: s.ledgers, decisions: s.decisions, today: s.today, yearEnds: yearEndsOf(s) }) };
   }
   const model = modelMemo.model;
   const byId = new Map(s.members.map((m) => [m.id, m]));

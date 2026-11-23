@@ -1,12 +1,17 @@
 import { totalDays } from "../../domain/counting";
 import { DOW, fmtDate, fmtHours, mondayIndex, num, parseISO, plural } from "../../domain/dates";
 import { PUBLISHED_YEARS } from "../../domain/calendar";
-import { balance, overtimeBalance, overtimeInYear, type LeaveRecord } from "../../domain/model";
+import { balance, carryStart, overtimeBalance, overtimeInYear, type Balance, type LeaveRecord } from "../../domain/model";
 import { csvFilename, toCSV } from "../../domain/csv";
 import { archiveCarries, recordsForYear, toast } from "../../state/actions";
 import { derive, nameOf, store, useApp } from "../../state/store";
 import { Empty, OvertimeButton, TYPES, YearPicker } from "../common";
 import type { Model } from "../../domain/model";
+
+function carryTitle(b: Balance, y: number, automatic: boolean): string {
+  const adj = b.adj ? `${b.adj > 0 ? "+" : ""}${num(b.adj)} entered by an Editor` : "nothing entered by an Editor";
+  return automatic ? `${num(b.auto)} left at the end of ${y - 1}; ${adj}` : `Not carried over from ${y - 1} automatically; ${adj}`;
+}
 
 /** For an archived year, balances are computed from the archived records. */
 function modelForYear(year: number, live: Model): Model {
@@ -56,10 +61,10 @@ export function Balances() {
                       </div>
                     </td>
                     <td className="r num">{num(b.ent)}</td>
-                    <td className="r num">{b.carry ? num(b.carry) : "—"}</td>
+                    <td className="r num" title={carryTitle(b, y, y - 1 >= carryStart(cal, m))}>{b.carry ? num(b.carry) : "—"}</td>
                     <td className="r num">{num(b.taken)}</td>
                     <td className="r num">{b.pending ? num(b.pending) : "—"}</td>
-                    <td className="r num" style={{ fontWeight: 600, color: b.left < 0 ? "var(--danger)" : undefined }}>{num(b.left)}</td>
+                    <td className="r num" style={{ fontWeight: 600, color: b.left < s.settings.minBalance ? "var(--danger)" : b.left < 0 ? "var(--warn)" : undefined }}>{num(b.left)}</td>
                     <td className="r num dim">{b.sick ? num(b.sick) : "—"}</td>
                     <td className="r num dim">{b.remote ? num(b.remote) : "—"}</td>
                   </tr>
@@ -67,6 +72,13 @@ export function Balances() {
               })}
             </tbody>
           </table>
+        </div>
+        <div className="pad tiny dim" data-testid="balances-note">
+          {y > s.settings.carryFrom
+            ? `“Carried over” is what was left at the end of ${y - 1}, plus or minus, together with any adjustment an Editor made in Team. `
+            : `Carry-overs into ${y} start at 0 and are entered by hand: “Carried over” is only what an Editor entered in Team. From ${s.settings.carryFrom + 1} on, what is left at the end of a year carries over by itself. `}
+          Balances can go into minus down to {num(s.settings.minBalance)} days.
+          {d.activeMembers.some((m) => balance(cal, model, m, y).ahead > 0) && ` “Taken” and “Pending” include vacation in ${y + 1} that was booked ahead against ${y}.`}
         </div>
       </div>
 

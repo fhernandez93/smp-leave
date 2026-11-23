@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { totalDays } from "../../domain/counting";
 import { addDays, fmtHours, iso, num, overlaps, parseISO, yearOf } from "../../domain/dates";
-import { balance, overtimeBalance, runDaysWith } from "../../domain/model";
+import { countedDays } from "../../domain/counting";
+import { balance, chargedYear, draftRecord, overtimeBalance, runDaysWith } from "../../domain/model";
 import { LEAVE_TYPES, type LeaveType } from "../../domain/types";
-import { archiveCarries, bookLeave, closeModal, NOTE_MAX } from "../../state/actions";
+import { archiveCarries, bookingProblem, bookLeave, closeModal, NOTE_MAX } from "../../state/actions";
 import { nameOf, useApp } from "../../state/store";
 import { TYPES } from "../common";
 import { Modal } from "./ModalHost";
@@ -55,10 +56,34 @@ export function Booking({ start }: { start?: string }) {
     }
     if (TYPES[type].deducts) {
       const m = s.members.find((x) => x.id === memberId) ?? null;
-      const left = balance(cal, model, m, yearOf(from)).left - days;
-      calc.push(<span key="left" className={left < 0 ? "bad" : "tiny dim"} style={{ display: "block", marginTop: 4 }}>
-        {left < 0 ? `That is ${num(-left)} more than ${nameOf(s, d, memberId)} has left this year.` : `${num(left)} vacation days would remain in ${yearOf(from)}.`}
-      </span>);
+      const rec = draftRecord(s.today, draft);
+      const problem = bookingProblem(draft);
+      const min = Number(s.settings.minBalance);
+      if (problem?.tooFar) {
+        ok = false;
+        calc.push(<span key="far" className="bad" style={{ display: "block", marginTop: 4 }}>{problem.message}</span>);
+      } else {
+        const years = [...new Set(countedDays(cal, rec).map((x) => chargedYear(rec, x.date)))].sort((a, b) => a - b);
+        if (rec.chargeYear != null) {
+          calc.push(<span key="ahead" className="tiny dim" style={{ display: "block", marginTop: 4 }}>
+            Booked ahead: {yearOf(to) === yearOf(from) ? "these days come" : `the ${yearOf(to)} days come`} out of {memberId === d.memberId ? "your" : `${nameOf(s, d, memberId)}’s`} {rec.chargeYear} vacation days.
+          </span>);
+        }
+        for (const y of years) {
+          const left = balance(cal, model, m, y, [rec]).left;
+          calc.push(<span key={`left-${y}`} className={left < min ? "bad" : left < 0 ? "warn" : "tiny dim"} style={{ display: "block", marginTop: 4 }}>
+            {left < 0 ? `${y} would be at ${num(left)} vacation days (lowest allowed ${num(min)}).` : `${num(left)} vacation days would remain in ${y}.`}
+          </span>);
+        }
+        if (problem) {
+          ok = false;
+          // waiting for the new year only helps when the year that goes too low is the one booked ahead against
+          const wait = rec.chargeYear != null && problem.year === rec.chargeYear;
+          calc.push(<span key="limit" className="bad" style={{ display: "block", marginTop: 4 }}>
+            {problem.message}{wait ? ` From 1 January ${rec.chargeYear! + 1} it comes out of the ${rec.chargeYear! + 1} days instead.` : ""}
+          </span>);
+        }
+      }
     }
     const clash = model.leave.filter((r) => r.memberId !== memberId && r.status !== "rejected" && r.status !== "cancelled" && overlaps(r, draft));
     if (clash.length) calc.push(<span key="clash" className="warn">Also away then: {[...new Set(clash.map((r) => nameOf(s, d, r.memberId)))].join(", ")}</span>);

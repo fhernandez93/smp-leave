@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, HOLIDAY_DEFS, holidayDate, PUBLISHED_YEARS, YEAR_END,
 import { fmtDate, fmtShort, iso, num, yearOf } from "../../domain/dates";
 import { archiveCandidate, archiveYear, DOC_WARN, openModal, saveSettings, toast } from "../../state/actions";
 import { useApp } from "../../state/store";
+import { parseMinBalance } from "../../platform/parse";
 import { YearPicker } from "../common";
 
 const WEEK: [string, number][] = [["Mon", 1], ["Tue", 2], ["Wed", 3], ["Thu", 4], ["Fri", 5], ["Sat", 6], ["Sun", 0]];
@@ -13,6 +14,7 @@ export function Settings() {
   const [teamName, setTeamName] = useState(st.teamName);
   const [days, setDays] = useState(String(st.defaultDays));
   const [thr, setThr] = useState(String(st.approvalThreshold));
+  const [minBal, setMinBal] = useState(String(st.minBalance));
   const [hpd, setHpd] = useState(String(d.cal.hoursPerDay()));
   const [workdays, setWorkdays] = useState<number[]>(st.workdays);
   const [busy, setBusy] = useState(false);
@@ -24,6 +26,7 @@ export function Settings() {
       teamName: teamName.trim() || DEFAULT_SETTINGS.teamName,
       defaultDays: Number(days) || 0,
       approvalThreshold: Number(thr) || 0,
+      minBalance: parseMinBalance(Number(minBal) || 0),
       hoursPerDay: Number(hpd) || DEFAULT_SETTINGS.hoursPerDay,
       workdays,
     });
@@ -42,6 +45,12 @@ export function Settings() {
           </div>
           <p className="tiny dim" style={{ margin: "-6px 0 14px" }}>
             Vacation and time off in lieu longer than {num(st.approvalThreshold)} working days in a row go to an approver. Sick leave and remote days are logged directly, and every overtime entry needs approval whatever its size. Changing this never reopens bookings that were already accepted.
+          </p>
+          <label className="field"><span>Lowest vacation balance allowed</span><input id="set-min" type="number" min="-60" max="0" step="0.5" value={minBal} onChange={(e) => setMinBal(e.target.value)} /></label>
+          <p className="tiny dim" style={{ margin: "-6px 0 14px" }}>
+            People can go into minus down to {num(st.minBalance)} days, for example to take leave before next year’s days arrive. A booking that would go lower is refused.
+            Vacation can be booked up to the end of next year; days in next year booked ahead come out of this year’s balance.
+            What is left at the end of a year, plus or minus, carries into the next one automatically, starting with what is left at the end of {st.carryFrom}. Carry-overs into {st.carryFrom} start at 0: enter them by hand in Team (“Adjust ±”, with {st.carryFrom} selected).
           </p>
           <label className="field"><span>Hours in a full working day</span><input id="set-hpd" type="number" min="1" max="14" step="0.1" value={hpd} onChange={(e) => setHpd(e.target.value)} /></label>
           <p className="tiny dim" style={{ margin: "-6px 0 14px" }}>Used to turn banked overtime into days off in lieu. The State of Fribourg contracts 42 h a week at 100 %, which is 8.4 h over five days.</p>
@@ -186,6 +195,7 @@ function About() {
       <div className="pad small muted">
         <p style={{ marginTop: 0 }}>Everyone who can open this artifact sees the whole team’s absences. Balances are worked out live from the bookings, so correcting a booking corrects the balance.</p>
         <p>Sick leave and remote days are recorded but never deducted from vacation. Approved overtime banks up as hours and comes back out as time off in lieu.</p>
+        <p>A vacation balance may go into minus down to the limit in Settings; a booking that would go lower is refused, and one written past the page goes to an approver instead. Vacation can be booked up to the end of next year, and next year’s days booked this year come out of this year’s balance. What is left at the end of a year, plus or minus, carries into the next one; the number under “Adjust” in Team is added on top.</p>
         <p>Who can do what is enforced by the artifact itself, not just by this page. Everyone at Contributor can book and cancel their own upcoming time. Only Editors can decide on requests, change the roster or these settings, and record time for someone else. Approvers need Editor access in the share menu.</p>
         <p>Once a booking has been decided, or accepted automatically, an approver’s page keeps a copy, so past leave can’t quietly disappear. A booking made and deleted before any approver opens the tracker leaves no record.</p>
         <p style={{ marginBottom: 0 }}>Days off follow the calendar the Amt für Personal und Organisation publishes for State of Fribourg employees at{" "}

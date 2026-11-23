@@ -38,7 +38,10 @@ export function entryBody(e: Entry): Raw {
     withdrawnAt: e.withdrawnAt, withdrawnBy: e.withdrawnBy,
   };
   if (e.kind === "leave") {
-    return { ...common, type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd, halfPeriod: e.halfPeriod };
+    return {
+      ...common, type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd, halfPeriod: e.halfPeriod,
+      ...(e.chargeYear != null ? { chargeYear: e.chargeYear } : {}),
+    };
   }
   return { ...common, date: e.date, hours: e.hours };
 }

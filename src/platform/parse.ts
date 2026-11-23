@@ -17,6 +17,13 @@ const str = (v: unknown, max = 500): string => (typeof v === "string" ? v.slice(
 const strOrNull = (v: unknown): string | null => (typeof v === "string" && v ? v.slice(0, 200) : null);
 const finite = (v: unknown, fallback: number): number => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
 const bool = (v: unknown): boolean => v === true;
+/** A plausible calendar year, or null. */
+export const yearOrNull = (v: unknown): number | null => (Number.isInteger(v) && (v as number) >= 1900 && (v as number) <= 9999 ? (v as number) : null);
+/** The lowest balance allowed: never positive (a missing sign means minus), never below −366. */
+export function parseMinBalance(v: unknown): number {
+  const n = finite(v, DEFAULT_SETTINGS.minBalance);
+  return Math.max(-366, -Math.abs(n));
+}
 
 function numMap(v: unknown): Record<string, number> {
   const out: Record<string, number> = {};
@@ -62,6 +69,8 @@ export function parseSettings(raw: Raw | undefined): { settings: Settings; exist
       created: strOrNull(raw.created),
       holidayVersion: finite(raw.holidayVersion, 0),
       archivedBefore,
+      minBalance: parseMinBalance(raw.minBalance),
+      carryFrom: yearOrNull(raw.carryFrom) ?? DEFAULT_SETTINGS.carryFrom,
     },
   };
 }
@@ -118,6 +127,7 @@ export function parseEntry(id: string, raw: unknown): Entry | null {
   return {
     ...base, kind: "leave", type: raw.type as LeaveType, start: raw.start, end: raw.end,
     halfStart: bool(raw.halfStart), halfEnd: bool(raw.halfEnd), halfPeriod,
+    ...(yearOrNull(raw.chargeYear) != null ? { chargeYear: yearOrNull(raw.chargeYear) } : {}),
   };
 }
 
@@ -141,6 +151,8 @@ function parseSnapshot(raw: unknown): DecisionSnapshot | null {
       halfStart: bool(raw.halfStart), halfEnd: bool(raw.halfEnd),
     };
     if (raw.halfPeriod === "am" || raw.halfPeriod === "pm") s.halfPeriod = raw.halfPeriod;
+    const cy = yearOrNull(raw.chargeYear);
+    if (cy != null) s.chargeYear = cy;
     return s;
   }
   if (raw.kind === "overtime") {
@@ -180,6 +192,8 @@ export interface ArchiveSummary {
   year: number;
   hoursPerDay: number;
   carry: Record<string, { earnedH: number; spentH: number }>;
+  /** memberId -> vacation days left at the end of that year (carried into the next) */
+  vacLeft: Record<string, number>;
   complete: boolean;
 }
 
@@ -191,5 +205,9 @@ export function parseArchiveSummary(id: string, raw: Raw | undefined): ArchiveSu
       if (isObj(v)) carry[m] = { earnedH: finite(v.earnedH, 0), spentH: finite(v.spentH, 0) };
     }
   }
-  return { year: Number(id), hoursPerDay: finite(raw.hoursPerDay, DEFAULT_SETTINGS.hoursPerDay), carry, complete: bool(raw.complete) };
+  const vacLeft: Record<string, number> = {};
+  if (isObj(raw.vacLeft)) {
+    for (const [m, v] of Object.entries(raw.vacLeft)) if (typeof v === "number" && Number.isFinite(v)) vacLeft[m] = v;
+  }
+  return { year: Number(id), hoursPerDay: finite(raw.hoursPerDay, DEFAULT_SETTINGS.hoursPerDay), carry, vacLeft, complete: bool(raw.complete) };
 }

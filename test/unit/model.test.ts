@@ -181,7 +181,7 @@ describe("balances and overtime", () => {
       members: [a],
       ledgers: { u_alice: [leave("t", "m_alice", "2026-03-02", "2026-03-03"), leave("p", "m_alice", "2026-04-13", "2026-04-17"), leave("s", "m_alice", "2026-03-10", "2026-03-10", { type: "sick" })] },
     });
-    expect(balance(c, m, a, 2026)).toEqual({ ent: 30, carry: 2, taken: 2, pending: 5, sick: 1, remote: 0, left: 25 });
+    expect(balance(c, m, a, 2026)).toMatchObject({ ent: 30, carry: 2, auto: 0, adj: 2, taken: 2, pending: 5, sick: 1, remote: 0, left: 25, ahead: 0 });
   });
 
   it("banks only approved overtime and spends it on time off in lieu", () => {

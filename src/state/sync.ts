@@ -99,7 +99,9 @@ export function subscribe(): void {
   // one small summary document per archived year
   unsubs.push(db.collection("archive").limit(1000).onSnapshot((q) => {
     const archive = q.docs.map((d) => parseArchiveSummary(d.id, d.data())).filter((a) => !!a);
-    store.set((s) => ({ archive, loaded: { ...s.loaded, archive: true } }));
+    store.set((s) => ({ archive, loaded: { ...s.loaded, archive: true }, definitive: definitive("archive", q.metadata.fromCache) }));
+  // a failed load lets the page show what it has, but never counts as definitive: sealing and
+  // archiving need the archived years' closing balances (carry-over and the minus limit use them)
   }, () => store.set((s) => ({ loaded: { ...s.loaded, archive: true } }))));
 
   if (isAdmin) {

@@ -62,6 +62,8 @@ export const DEFAULT_SETTINGS: Settings = {
   created: null,
   holidayVersion: HOLIDAY_VERSION,
   archivedBefore: null,
+  minBalance: -10,
+  carryFrom: 2027,
 };
 
 export interface Holiday {

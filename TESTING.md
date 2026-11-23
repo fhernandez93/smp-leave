@@ -33,6 +33,11 @@
     out of an archived year), Today, the month shared with the Calendar tab, the remembered view,
     half-day and pending cells, one tab stop per booking (Enter / Space), scroll-to-today on a
     phone, distinct per-person badge colours that every viewer sees alike.
+  - Minus balances and booking ahead: down to the limit is allowed, half a day more is refused;
+    sick / remote never limited; next year's days come out of this year and are stored with their
+    charge year; nothing past the end of next year; an Editor's new limit reaches the dialog; a raw
+    over-limit booking waits for an approver and is never sealed; Team and Balances say that
+    2027 carry-overs are entered by hand.
   - **Parity oracle**: the real v1 page and v2 render identical Balances, Overtime
     and Days-off tables from the same data (v1 documents vs. their migration), for
     2026 and 2027.
@@ -61,3 +66,10 @@ with `ArtifactData` at `as_level` view / interact, and open it in a browser.
 - Editors can technically write their own decisions; the "not your own unless
   you're the only approver" rule is enforced in the page only.
 - Everyone who can open the artifact sees sick leave (as in v1).
+- The minus limit is checked on every viewer's machine, but an approver can still approve a
+  booking that goes past it.
+- A booking ahead written past the page with a charge year is accepted only while that year is
+  running (until 31 January of the next year once carry-over is automatic); after that it goes to
+  an approver. Within that window it chooses which year's limit applies.
+- An Editor tab still running an older version can record bookings ahead without their charge
+  year (shown as "changed after it was decided"); Editors reload after a publish.

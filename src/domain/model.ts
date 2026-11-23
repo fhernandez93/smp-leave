@@ -64,17 +64,22 @@ export function computeBindings(members: readonly Member[], links: readonly Link
    ==================================================================== */
 
 export function fingerprint(ledgerKey: string, e: Entry | DecisionSnapshot): string {
-  const x = e as { type?: string; start?: string; end?: string; halfStart?: boolean; halfEnd?: boolean; halfPeriod?: string | null; date?: string; hours?: number };
-  return [
+  const x = e as { type?: string; start?: string; end?: string; halfStart?: boolean; halfEnd?: boolean; halfPeriod?: string | null; date?: string; hours?: number; chargeYear?: number | null };
+  const fp = [
     ledgerKey, e.kind, e.memberId,
     x.type ?? "", x.start ?? "", x.end ?? "", x.halfStart ? 1 : 0, x.halfEnd ? 1 : 0, x.halfPeriod ?? "",
     x.date ?? "", x.hours ?? "",
   ].join("|");
+  // appended only when set, so every fingerprint written before booking-ahead existed still matches
+  return x.chargeYear != null ? `${fp}|cy=${x.chargeYear}` : fp;
 }
 
 export function snapshotOf(e: Entry): DecisionSnapshot {
   if (e.kind === "leave") {
-    return { kind: "leave", memberId: e.memberId, type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd };
+    return {
+      kind: "leave", memberId: e.memberId, type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd,
+      ...(e.chargeYear != null ? { chargeYear: e.chargeYear } : {}),
+    };
   }
   return { kind: "overtime", memberId: e.memberId, date: e.date, hours: e.hours };
 }
@@ -86,7 +91,9 @@ export function snapshotOf(e: Entry): DecisionSnapshot {
 export type Flag =
   | "changed-after-decision"   // the ledger entry no longer matches what was decided
   | "entry-removed"            // decided, but the entry is gone from the ledger
-  | "withdrawal-unconfirmed";  // withdrawn after its start without an approver recording it
+  | "withdrawal-unconfirmed"   // withdrawn after its start without an approver recording it
+  | "over-limit"               // would take its year below the lowest balance allowed: needs an approver
+  | "charge-closed";           // booked ahead against a year that is already over: needs an approver
 
 interface RecordBase {
   /** `${ledgerKey}/${entryId}` — unique across ledgers */
@@ -114,6 +121,8 @@ export interface LeaveRecord extends RecordBase {
   halfStart: boolean;
   halfEnd: boolean;
   halfPeriod: "am" | "pm" | null;
+  /** Booked ahead: days after this year count against it (only an honoured value; see `honouredChargeYear`). */
+  chargeYear: number | null;
 }
 export interface OvertimeRecord extends RecordBase {
   kind: "overtime";
@@ -131,6 +140,8 @@ export interface ModelInput {
   /** ledgerKey -> entryId -> decision */
   decisions: ReadonlyMap<string, ReadonlyMap<string, Decision>>;
   today: ISODate;
+  /** archived year -> memberId -> vacation days left at its end (from the archive summaries) */
+  yearEnds?: ReadonlyMap<number, Readonly<Record<string, number>>>;
 }
 
 export interface Model {
@@ -142,7 +153,11 @@ export interface Model {
   ignored: { ledgerKey: string; entryId: string; memberId: string }[];
   /** records whose ending year is already archived (booked late) — excluded from totals */
   late: LeaveOrOvertime[];
+  yearEnds: ReadonlyMap<number, Readonly<Record<string, number>>>;
 }
+
+/** What `balance` needs from a model. */
+export type BalanceModel = Pick<Model, "leave" | "yearEnds">;
 
 export const DEDUCTING: ReadonlySet<LeaveType> = new Set(["vacation"]);
 const APPROVAL_TYPES: ReadonlySet<LeaveType> = new Set(["vacation", "comp"]);
@@ -152,6 +167,30 @@ function endOf(r: LeaveOrOvertime): ISODate {
 }
 function startOf(r: LeaveOrOvertime): ISODate {
   return r.kind === "leave" ? r.start : r.date;
+}
+
+/**
+ * A stored charge year counts only for vacation, and only one year back from where the
+ * booking ends (booking ahead reaches into next year at most). Anything else is ignored.
+ */
+export function honouredChargeYear(type: LeaveType, end: ISODate, cy: number | null | undefined): number | null {
+  return type === "vacation" && cy != null && cy === yearOf(end) - 1 ? cy : null;
+}
+
+/** The charge year a new booking gets: vacation ending after the current year is booked ahead. */
+export function chargeYearFor(today: ISODate, type: LeaveType, end: ISODate): number | null {
+  return type === "vacation" && yearOf(end) === yearOf(today) + 1 ? yearOf(today) : null;
+}
+
+/** Last day vacation can be booked up to: 31 December of next year. */
+export function lastBookableDay(today: ISODate): ISODate {
+  return `${yearOf(today) + 1}-12-31`;
+}
+
+/** Which year's vacation balance a counted day of this record comes out of. */
+export function chargedYear(r: Pick<LeaveRecord, "type" | "chargeYear">, date: ISODate): number {
+  const y = yearOf(date);
+  return r.type === "vacation" && r.chargeYear != null && y > r.chargeYear ? r.chargeYear : y;
 }
 
 /** The next calendar day after `d` on which a full or half working day exists. */
@@ -290,6 +329,64 @@ export function buildModel(input: ModelInput): Model {
     if (archivedBefore != null && yearOf(endOf(r)) < archivedBefore) late.push(r);
     else live.push(r);
   }
+
+  // Booking ahead and the minus limit, re-checked here so that a booking written straight into
+  // the database can't skip them: such a booking goes to an approver instead of being accepted.
+  const yearEnds = input.yearEnds ?? new Map<number, Readonly<Record<string, number>>>();
+  const liveLeave = live.filter((r): r is LeaveRecord => r.kind === "leave");
+  // A withdrawal after the start isn't confirmed until an approver records it, so those count here too.
+  const candidates = liveLeave.filter((r) => !r.decision && r.status === "approved" && r.auto && r.type === "vacation" && r.entry);
+  const hold = (r: LeaveRecord, flag: Flag) => {
+    r.status = "pending";
+    r.auto = false;
+    if (!r.flags.includes(flag)) r.flags.push(flag);
+  };
+  const carryFrom = Number(cal.settings.carryFrom);
+  for (const r of liveLeave) {
+    if (r.decision || r.chargeYear == null) continue;
+    // Not decided yet, but charged to a year already archived: that year's closing balance is
+    // fixed, so the days count in their own year and an approver has to look at it.
+    if (archivedBefore != null && r.chargeYear < archivedBefore) {
+      r.chargeYear = null;
+      if (r.status === "approved" && r.auto) hold(r, "charge-closed");
+      else if (!r.flags.includes("charge-closed")) r.flags.push("charge-closed");
+      continue;
+    }
+    // A booking ahead is made, and sealed by an approver's page, while its charge year is still
+    // running. While carry-over into the next year is entered by hand there is no grace at all
+    // (a late charge would be free days); afterwards an honest December booking gets until 31 January.
+    const lastDay = r.chargeYear + 1 <= carryFrom ? `${r.chargeYear}-12-31` : `${r.chargeYear + 1}-01-31`;
+    if (today > lastDay) {
+      if (r.status === "approved" && r.auto) hold(r, "charge-closed");
+      else if (!r.flags.includes("charge-closed")) r.flags.push("charge-closed");
+    }
+  }
+  const tmp: BalanceModel = { leave: liveLeave, yearEnds };
+  const min = Number(cal.settings.minBalance);
+  for (const m of members) {
+    const mine = candidates.filter((r) => r.memberId === m.id && r.status === "approved");
+    if (!mine.length) continue;
+    const charged = new Map<LeaveRecord, Set<number>>();
+    let from = Infinity;
+    for (const r of mine) {
+      const ys = new Set(countedDays(cal, r).map((x) => chargedYear(r, x.date)));
+      charged.set(r, ys);
+      for (const y of ys) from = Math.min(from, y);
+    }
+    // every year a minus can reach: the charged years and, through carry-over, the ones after
+    const to = lastYearFor(m, liveLeave, from);
+    const start = carryStart(cal, m);
+    for (let y = from; y <= to && y - from < 10; y++) {
+      if (archivedBefore != null && y < archivedBefore) continue;
+      if (balance(cal, tmp, m, y).left >= min - 1e-9) continue;
+      // Every self-accepted booking that feeds this year waits for an approver, whatever its date,
+      // so an extra entry can't push an honest one into the queue while staying accepted itself.
+      // A booking feeds year y when it is charged to y, or to an earlier year whose balance carries into y.
+      const feeds = (x: number) => x === y || (x < y && x >= start);
+      for (const r of mine) if ([...charged.get(r)!].some(feeds)) hold(r, "over-limit");
+    }
+  }
+
   live.sort((a, b) => startOf(b).localeCompare(startOf(a)) || (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
   return {
     bindings,
@@ -298,6 +395,7 @@ export function buildModel(input: ModelInput): Model {
     overtime: live.filter((r): r is OvertimeRecord => r.kind === "overtime"),
     ignored,
     late,
+    yearEnds,
   };
 
   function base(ledgerKey: string, id: string, memberId: string, d: Decision | null) {
@@ -326,7 +424,11 @@ export function buildModel(input: ModelInput): Model {
     const common = { ...b, note: e.note, createdBy: e.createdBy, createdAt: e.createdAt, withdrawnAt: e.withdrawnAt, entry: e };
     if (decision && !d) common.flags.push("changed-after-decision");
     if (e.kind === "leave") {
-      return { ...common, kind: "leave", type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd, halfPeriod: e.halfPeriod };
+      // a decided record is charged as it was decided: the snapshot is what the approver saw
+      // (an approver may approve a booking ahead against a year archived since, counted in its own year)
+      const snap = d?.snapshot?.kind === "leave" ? d.snapshot : null;
+      const cy = snap ? honouredChargeYear(snap.type ?? e.type, snap.end ?? e.end, snap.chargeYear) : honouredChargeYear(e.type, e.end, e.chargeYear);
+      return { ...common, kind: "leave", type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd, halfPeriod: e.halfPeriod, chargeYear: cy };
     }
     return { ...common, kind: "overtime", date: e.date, hours: e.hours };
   }
@@ -337,7 +439,7 @@ export function buildModel(input: ModelInput): Model {
     const common = { ...b, note: "", createdBy: null, createdAt: d.at, withdrawnAt: null, entry: null, flags: ["entry-removed" as Flag] };
     if (s.kind === "leave" && s.start && s.end && s.type) {
       const hp = (s as DecisionSnapshot & { halfPeriod?: "am" | "pm" | null }).halfPeriod ?? null;
-      return { ...common, kind: "leave", type: s.type, start: s.start, end: s.end, halfStart: !!s.halfStart, halfEnd: !!s.halfEnd, halfPeriod: hp };
+      return { ...common, kind: "leave", type: s.type, start: s.start, end: s.end, halfStart: !!s.halfStart, halfEnd: !!s.halfEnd, halfPeriod: hp, chargeYear: honouredChargeYear(s.type, s.end, s.chargeYear) };
     }
     if (s.kind === "overtime" && s.date && typeof s.hours === "number") {
       return { ...common, kind: "overtime", date: s.date, hours: s.hours };
@@ -382,7 +484,10 @@ export function sealsNeeded(model: Model, now: string, today: ISODate): SealWrit
 /** The fields a decision records about a record (its effective, as-decided values). */
 export function recordSnapshot(r: LeaveOrOvertime): DecisionSnapshot {
   if (r.kind === "leave") {
-    return { kind: "leave", memberId: r.memberId, type: r.type, start: r.start, end: r.end, halfStart: r.halfStart, halfEnd: r.halfEnd, halfPeriod: r.halfPeriod } as DecisionSnapshot;
+    return {
+      kind: "leave", memberId: r.memberId, type: r.type, start: r.start, end: r.end, halfStart: r.halfStart, halfEnd: r.halfEnd, halfPeriod: r.halfPeriod,
+      ...(r.chargeYear != null ? { chargeYear: r.chargeYear } : {}),
+    } as DecisionSnapshot;
   }
   return { kind: "overtime", memberId: r.memberId, date: r.date, hours: r.hours };
 }
@@ -397,31 +502,129 @@ export function entitlement(cal: Calendar, m: Member | null, year: number): numb
   return Number(e == null ? cal.settings.defaultDays : e) || 0;
 }
 
+/** Days an Editor typed in under Team for this year, added on top of the automatic carry-over. */
 export function carryover(m: Member | null, year: number): number {
   return Number(m?.carryover[String(year)] ?? 0) || 0;
 }
 
-export interface Balance {
-  ent: number; carry: number; taken: number; pending: number; sick: number; remote: number; left: number;
+/** First year whose end-of-year balance carries into the next one for this person. */
+export function carryStart(cal: Calendar, m: Member): number {
+  const added = m.addedAt ? yearOf(m.addedAt) : NaN;
+  return Math.max(Number(cal.settings.carryFrom) || 0, Number.isFinite(added) ? added : 0);
 }
 
-export function balance(cal: Calendar, model: Model, member: Member | null, year: number, extra: readonly LeaveRecord[] = []): Balance {
+/** How the previous year ended, carried into `year` automatically (0 before carry-over starts). */
+export function autoCarry(cal: Calendar, model: BalanceModel, m: Member | null, year: number, extra: readonly LeaveRecord[] = [], memo?: Map<number, Balance>): number {
+  if (!m) return 0;
+  const prev = year - 1;
+  if (prev < carryStart(cal, m) || year - carryStart(cal, m) > 60) return 0;
+  const before = cal.settings.archivedBefore;
+  if (before != null && prev < before) return model.yearEnds.get(prev)?.[m.id] ?? 0;
+  return (memo ? balanceMemo(cal, model, m, prev, extra, memo) : balance(cal, model, m, prev, extra)).left;
+}
+
+/** Balances without extra records, per model, calendar and member: each year is worked out once. */
+const cache = new WeakMap<object, { cal: Calendar; byMember: WeakMap<Member, Map<number, Balance>> }>();
+
+export interface Balance {
+  ent: number;
+  /** automatic carry-over + adjustment */
+  carry: number;
+  /** the part carried over automatically from the year before */
+  auto: number;
+  /** the part an Editor typed in */
+  adj: number;
+  taken: number; pending: number; sick: number; remote: number; left: number;
+  /** of taken + pending: vacation in a later year that was booked ahead against this one */
+  ahead: number;
+}
+
+export function balance(cal: Calendar, model: BalanceModel, member: Member | null, year: number, extra: readonly LeaveRecord[] = []): Balance {
+  if (!member) return computeBalance(cal, model, null, year, extra, new Map());
+  if (extra.length) return balanceMemo(cal, model, member, year, extra, new Map());
+  let c = cache.get(model);
+  if (!c || c.cal !== cal) { c = { cal, byMember: new WeakMap() }; cache.set(model, c); }
+  let memo = c.byMember.get(member);
+  if (!memo) { memo = new Map(); c.byMember.set(member, memo); }
+  return balanceMemo(cal, model, member, year, extra, memo);
+}
+
+/** `memo` holds this member's balances for this model and these extra records only. */
+function balanceMemo(cal: Calendar, model: BalanceModel, member: Member, year: number, extra: readonly LeaveRecord[], memo: Map<number, Balance>): Balance {
+  const hit = memo.get(year);
+  if (hit) return hit;
+  const b = computeBalance(cal, model, member, year, extra, memo);
+  memo.set(year, b);
+  return b;
+}
+
+function computeBalance(cal: Calendar, model: BalanceModel, member: Member | null, year: number, extra: readonly LeaveRecord[], memo: Map<number, Balance>): Balance {
   const ent = entitlement(cal, member, year);
-  const carry = carryover(member, year);
-  let taken = 0, pending = 0, sick = 0, remote = 0;
+  const adj = carryover(member, year);
+  const auto = autoCarry(cal, model, member, year, extra, memo);
+  let taken = 0, pending = 0, sick = 0, remote = 0, ahead = 0;
   if (member) {
     for (const r of [...model.leave, ...extra]) {
       if (r.memberId !== member.id || r.status === "rejected" || r.status === "cancelled") continue;
-      const d = countedDays(cal, r).reduce((a, x) => a + (yearOf(x.date) === year ? x.w : 0), 0);
-      if (!d) continue;
-      if (r.type === "vacation") {
-        if (r.status === "pending") pending += d;
-        else taken += d;
-      } else if (r.type === "sick") sick += d;
-      else if (r.type === "remote") remote += d;
+      for (const x of countedDays(cal, r)) {
+        if (r.type === "vacation") {
+          if (chargedYear(r, x.date) !== year) continue;
+          if (r.status === "pending") pending += x.w;
+          else taken += x.w;
+          if (yearOf(x.date) > year) ahead += x.w;
+        } else if (yearOf(x.date) !== year) continue;
+        else if (r.type === "sick") sick += x.w;
+        else if (r.type === "remote") remote += x.w;
+      }
     }
   }
-  return { ent, carry, taken, pending, sick, remote, left: ent + carry - taken - pending };
+  const carry = auto + adj;
+  return { ent, carry, auto, adj, taken, pending, sick, remote, ahead, left: ent + carry - taken - pending };
+}
+
+/** The last year a person's minus could reach: their bookings, allowances and adjustments, and at least the year after `from`. */
+function lastYearFor(member: Member, leave: readonly LeaveRecord[], from: number): number {
+  let to = from + 1;
+  for (const r of leave) if (r.memberId === member.id && r.type === "vacation") to = Math.max(to, yearOf(r.end));
+  for (const k of [...Object.keys(member.carryover), ...Object.keys(member.entitlements)]) to = Math.max(to, Number(k));
+  return to;
+}
+
+/** A not-yet-saved booking, shaped like a record so balances can include it. */
+export function draftRecord(today: ISODate, d: Pick<LeaveEntry, "memberId" | "type" | "start" | "end" | "halfStart" | "halfEnd" | "halfPeriod">): LeaveRecord {
+  return {
+    uid: "__draft__", id: "__draft__", ledgerKey: "", memberId: d.memberId, status: "pending", auto: false, decision: null,
+    note: "", createdBy: null, createdAt: null, withdrawnAt: null, flags: [], entry: null,
+    kind: "leave", type: d.type, start: d.start, end: d.end, halfStart: d.halfStart, halfEnd: d.halfEnd, halfPeriod: d.halfPeriod,
+    chargeYear: chargeYearFor(today, d.type, d.end),
+  };
+}
+
+export interface LimitBreach { year: number; left: number }
+
+/**
+ * Years a draft would take below the lowest balance allowed: its own charge year and every
+ * later one (carry-over passes a minus forward). Only years the draft makes worse count, so
+ * someone already below the limit can still book sick or remote days.
+ */
+export function limitBreaches(cal: Calendar, model: BalanceModel, member: Member | null, draft: LeaveRecord): LimitBreach[] {
+  if (!member || draft.type !== "vacation") return [];
+  const days = countedDays(cal, draft);
+  if (!days.length) return [];
+  const min = Number(cal.settings.minBalance);
+  const before = cal.settings.archivedBefore;
+  let from = Infinity, to = -Infinity;
+  for (const x of days) { const y = chargedYear(draft, x.date); from = Math.min(from, y); to = Math.max(to, y); }
+  to = Math.max(to, lastYearFor(member, model.leave, from));
+  const out: LimitBreach[] = [];
+  const memoNow = new Map<number, Balance>();
+  for (let y = from; y <= to && y - from < 10; y++) {
+    if (before != null && y < before) continue;
+    const was = balance(cal, model, member, y).left;
+    const now = balanceMemo(cal, model, member, y, [draft], memoNow).left;
+    if (now < min - 1e-9 && now < was - 1e-9) out.push({ year: y, left: now });
+  }
+  return out;
 }
 
 export interface ArchiveCarry {

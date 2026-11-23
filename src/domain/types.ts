@@ -39,6 +39,10 @@ export interface Settings {
   holidayVersion: number;
   /** Ledger entries ending before 1 January of this year live in archive docs. */
   archivedBefore: number | null;
+  /** Lowest vacation balance a booking may leave (≤ 0, e.g. −10). */
+  minBalance: number;
+  /** First year whose end-of-year vacation balance carries into the next year automatically. */
+  carryFrom: number;
 }
 
 export type Role = "member" | "manager";
@@ -77,6 +81,11 @@ export interface LeaveEntry extends EntryBase {
   halfStart: boolean;
   halfEnd: boolean;
   halfPeriod: HalfPeriod | null;
+  /**
+   * Vacation booked ahead: days falling after this year count against it. Set when
+   * the booking was made in this year and ends in the next one; absent otherwise.
+   */
+  chargeYear?: number | null;
 }
 
 export interface OvertimeEntry extends EntryBase {
@@ -99,6 +108,7 @@ export interface DecisionSnapshot {
   halfStart?: boolean;
   halfEnd?: boolean;
   halfPeriod?: HalfPeriod | null;
+  chargeYear?: number | null;
 }
 
 export interface Decision {

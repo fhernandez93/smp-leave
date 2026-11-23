@@ -5,14 +5,17 @@
  */
 import { DEFAULT_SETTINGS, HOLIDAY_VERSION } from "../domain/calendar";
 import { countedDays, totalDays } from "../domain/counting";
-import { mondayOf, thursdayOf, yearOf } from "../domain/dates";
-import { fingerprint, recordSnapshot, sealsNeeded, type LeaveOrOvertime, type LeaveRecord, type OvertimeRecord } from "../domain/model";
+import { mondayOf, num, thursdayOf, yearOf } from "../domain/dates";
+import {
+  balance, carryStart, chargeYearFor, draftRecord, fingerprint, honouredChargeYear, lastBookableDay, limitBreaches, recordSnapshot, sealsNeeded,
+  type LeaveOrOvertime, type LeaveRecord, type OvertimeRecord,
+} from "../domain/model";
 import type { Decision, DecisionStatus, Entry, LeaveType, Member, Settings } from "../domain/types";
 import { decisionBody, entryBody } from "../platform/migrate";
 import { errorCode, type DocRef } from "../platform/runtime";
 import { parseLedger } from "../platform/parse";
 import { setPref } from "./prefs";
-import { derive, store, type ModalSpec, type ReqFilter, type State, type Tab, type TlView } from "./store";
+import { derive, nameOf, store, type ModalSpec, type ReqFilter, type State, type Tab, type TlView } from "./store";
 
 export const NOTE_MAX = 500;
 /** Refuse writes that would push a document near the platform's 256 KiB cap. */
@@ -201,15 +204,36 @@ export function bookLeave(draft: LeaveDraft, pending: boolean): Promise<boolean>
       throw new Refused(`${yearOf(draft.end)} is archived. Bookings there can’t be added any more.`);
     }
     if (totalDays(d.cal, draft) <= 0) throw new Refused("That range has no working days in it.");
+    const problem = bookingProblem(draft);
+    if (problem) throw new Refused(problem.message);
+    const chargeYear = chargeYearFor(s.today, draft.type, draft.end);
     const key = ledgerKeyForWrite(draft.memberId);
     const e: Entry = {
       id, kind: "leave", memberId: draft.memberId, type: draft.type,
       start: draft.start, end: draft.end, halfStart: draft.halfStart, halfEnd: draft.halfEnd && draft.start !== draft.end,
       halfPeriod: draft.halfStart && draft.start === draft.end ? draft.halfPeriod : null,
       note: draft.note.trim().slice(0, NOTE_MAX), createdBy: d.memberId, createdAt: nowISO(), withdrawnAt: null, withdrawnBy: null,
+      ...(chargeYear != null ? { chargeYear } : {}),
     };
     await putEntry(key, e);
   }, pending ? "Sent to an approver" : "Booked", { ownLedger: !store.get().isAdmin });
+}
+
+/**
+ * Why a vacation draft can't be booked (too far ahead, or below the lowest balance
+ * allowed), or null. The booking dialog shows the same text and disables Book.
+ */
+export function bookingProblem(draft: Pick<LeaveDraft, "memberId" | "type" | "start" | "end" | "halfStart" | "halfEnd" | "halfPeriod">): { message: string; tooFar: boolean; year: number | null } | null {
+  const s = store.get();
+  const d = derive(s);
+  if (draft.type !== "vacation") return null;
+  const last = lastBookableDay(s.today);
+  if (draft.end > last) return { message: `Vacation can be booked up to the end of ${yearOf(last)}.`, tooFar: true, year: null };
+  const m = s.members.find((x) => x.id === draft.memberId) ?? null;
+  const breach = limitBreaches(d.cal, d.model, m, draftRecord(s.today, draft))[0];
+  if (!breach) return null;
+  const who = d.memberId === draft.memberId ? "you" : nameOf(s, d, draft.memberId);
+  return { message: `That would take ${who} to ${num(breach.left)} days in ${breach.year}; the lowest allowed is ${num(s.settings.minBalance)}.`, tooFar: false, year: breach.year };
 }
 
 export function logOvertime(memberId: string, date: string, hours: number, note: string): Promise<boolean> {
@@ -303,7 +327,7 @@ export async function sealPass(): Promise<number> {
   const s = store.get();
   const d = derive(s);
   if (sealing || !d.isApprover || !d.ready) return 0;
-  if (!["settings", "members", "links", "ledger", "decisions"].every((k) => s.definitive[k])) return 0;
+  if (!["settings", "members", "links", "ledger", "decisions", "archive"].every((k) => s.definitive[k])) return 0;
   sealing = true;
   let wrote = 0;
   try {
@@ -402,7 +426,21 @@ export async function addMember(body: Record<string, unknown>, okMsg?: string): 
   return (await write(() => db().doc(`members/${id}`).set(body), okMsg)) ? id : null;
 }
 export function updateMember(id: string, patch: Record<string, unknown>, okMsg?: string): Promise<boolean> {
-  return write(() => db().doc(`members/${id}`).update(patch), okMsg);
+  return write(async () => {
+    // a lower allowance could send someone's unrecorded self-accepted bookings back to an approver
+    if ("entitlements" in patch || "carryover" in patch) await sealFirst("The change wasn’t saved");
+    await db().doc(`members/${id}`).update(patch);
+  }, okMsg);
+}
+
+/** Record every self-accepted booking before a change that could otherwise reopen it. */
+async function sealFirst(what: string): Promise<void> {
+  await sealPass();
+  await new Promise((r) => setTimeout(r, 0));
+  const pre = store.get();
+  if (sealsNeeded(derive(pre).model, nowISO(), pre.today).length) {
+    throw new Refused(`Some current bookings couldn’t be recorded first, so ${what.charAt(0).toLowerCase()}${what.slice(1)}. Try again in a moment.`);
+  }
 }
 export function acceptJoiner(uid: string, nameHint: string): Promise<boolean> {
   return write(async () => {
@@ -445,7 +483,7 @@ export async function createTeam(teamName: string, defaultDays: number, approval
     // never overwrite an existing team's settings (a cached, partial first snapshot can look empty)
     const existing = await db().doc("config/settings").get();
     if (!existing.exists) {
-      await db().doc("config/settings").set({ ...DEFAULT_SETTINGS, holidayVersion: HOLIDAY_VERSION, teamName: teamName || DEFAULT_SETTINGS.teamName, defaultDays, approvalThreshold, created: nowISO() } as unknown as Record<string, unknown>);
+      await db().doc("config/settings").set({ ...DEFAULT_SETTINGS, holidayVersion: HOLIDAY_VERSION, teamName: teamName || DEFAULT_SETTINGS.teamName, defaultDays, approvalThreshold, created: nowISO(), carryFrom: yearOf(s.today) } as unknown as Record<string, unknown>);
     }
     const again = await db().collection("members").limit(1).get();
     if (!again.empty) throw new Refused("This tracker already has a roster. Reload the page.");
@@ -465,12 +503,7 @@ export async function createTeam(teamName: string, defaultDays: number, approval
  */
 export function saveSettings(patch: Partial<Settings>): Promise<boolean> {
   return write(async () => {
-    await sealPass();
-    await new Promise((r) => setTimeout(r, 0));
-    const pre = store.get();
-    if (sealsNeeded(derive(pre).model, nowISO(), pre.today).length) {
-      throw new Refused("Some current bookings couldn’t be recorded first, so the settings weren’t changed. Try again in a moment.");
-    }
+    await sealFirst("The settings weren’t changed");
     const s = store.get();
     const next = { ...s.settings, ...patch, holidayVersion: HOLIDAY_VERSION };
     if (!next.created) next.created = nowISO();
@@ -487,7 +520,7 @@ export function archiveSerialize(r: LeaveOrOvertime): Record<string, unknown> {
   const base = { id: r.id, ledgerKey: r.ledgerKey, memberId: r.memberId, status: r.status, auto: r.auto, note: r.note, createdBy: r.createdBy, createdAt: r.createdAt,
     decision: r.decision ? decisionBody(r.decision) : null };
   return r.kind === "leave"
-    ? { ...base, kind: "leave", type: r.type, start: r.start, end: r.end, halfStart: r.halfStart, halfEnd: r.halfEnd, halfPeriod: r.halfPeriod }
+    ? { ...base, kind: "leave", type: r.type, start: r.start, end: r.end, halfStart: r.halfStart, halfEnd: r.halfEnd, halfPeriod: r.halfPeriod, ...(r.chargeYear != null ? { chargeYear: r.chargeYear } : {}) }
     : { ...base, kind: "overtime", date: r.date, hours: r.hours };
 }
 
@@ -523,6 +556,14 @@ export function archiveYear(year: number): Promise<boolean> {
     // only records that END in this year; anything older is already archived (or was booked late and is ignored)
     const recs = d.model.records.filter((r) => yearOf(endOf(r)) === year);
     if (recs.some((r) => r.status === "pending")) throw new Refused(`Decide the pending requests from ${year} first.`);
+    // the closing balance written below is final: nothing charged to this year may still change
+    if (d.model.leave.some((r) => r.chargeYear === year && r.status === "pending")) throw new Refused(`Decide the pending requests booked ahead against ${year} first.`);
+    // ...and it builds on the year before's closing balance, so the archive summaries must be in
+    if (!s.definitive.archive) throw new Refused("The archived years haven’t loaded yet. Try again in a moment.");
+    const prev = year - 1;
+    if (s.settings.archivedBefore != null && prev < s.settings.archivedBefore && s.members.some((m) => prev >= carryStart(d.cal, m) && d.model.yearEnds.get(prev)?.[m.id] === undefined)) {
+      throw new Refused(`The archive of ${prev} has no closing balances, so ${year}’s can’t be worked out. Nothing was changed.`);
+    }
     const hpd = d.cal.hoursPerDay();
     const carry: Record<string, { earnedH: number; spentH: number }> = {};
     const byKey = new Map<string, LeaveOrOvertime[]>();
@@ -532,7 +573,11 @@ export function archiveYear(year: number): Promise<boolean> {
       if (r.kind === "overtime" && r.status === "approved") c.earnedH += r.hours;
       if (r.kind === "leave" && r.type === "comp" && r.status !== "rejected" && r.status !== "cancelled") c.spentH += totalDays(d.cal, r) * hpd;
     }
-    await db().doc(`archive/${year}`).set({ year, hoursPerDay: hpd, carry, complete: false, at: nowISO() });
+    // how each person's vacation ended this year, carried into the next one once these records leave the live model
+    // (computed from the full live model, so vacation booked ahead into next year against this one is included)
+    const vacLeft: Record<string, number> = {};
+    for (const m of s.members) vacLeft[m.id] = balance(d.cal, d.model, m, year).left;
+    await db().doc(`archive/${year}`).set({ year, hoursPerDay: hpd, carry, vacLeft, complete: false, at: nowISO() });
     for (const [key, list] of byKey) {
       await db().doc(`archive/${year}/ledgers/${key}`).set({ year, records: list.map(archiveSerialize) });
     }
@@ -634,7 +679,8 @@ function fromArchive(key: string, x: Record<string, unknown>): LeaveOrOvertime |
   const status = (["approved", "rejected", "cancelled", "pending"] as const).find((v) => v === x.status) ?? "approved";
   const base = { uid: `${key}/${e.id}`, id: e.id, ledgerKey: key, memberId: e.memberId, status, auto: x.auto === true, decision: null,
     note: e.note, createdBy: e.createdBy, createdAt: e.createdAt, withdrawnAt: null, flags: [], entry: null };
-  if (e.kind === "leave") return { ...base, kind: "leave", type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd, halfPeriod: e.halfPeriod } as LeaveRecord;
+  // archived records keep the charge year they were counted with (copied explicitly: this rebuilds the record field by field)
+  if (e.kind === "leave") return { ...base, kind: "leave", type: e.type, start: e.start, end: e.end, halfStart: e.halfStart, halfEnd: e.halfEnd, halfPeriod: e.halfPeriod, chargeYear: honouredChargeYear(e.type, e.end, e.chargeYear) } as LeaveRecord;
   return { ...base, kind: "overtime", date: e.date, hours: e.hours } as OvertimeRecord;
 }
 

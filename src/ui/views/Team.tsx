@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { num } from "../../domain/dates";
-import { balance, carryover, entitlement } from "../../domain/model";
+import { autoCarry, balance, carryover, carryStart, entitlement } from "../../domain/model";
+import { yearOf } from "../../domain/dates";
 import type { Member } from "../../domain/types";
 import { acceptJoiner, claimLooksRight, dismissJoiner, openModal, pin, unlink, updateMember } from "../../state/actions";
 import { displayName, nameOf, useApp, type Derived, type State } from "../../state/store";
@@ -106,6 +107,14 @@ export function Team() {
           <YearPicker />
           {editable && <button className="btn sm primary" type="button" onClick={() => openModal({ kind: "addPeople" })}>Add people</button>}
         </div>
+        {y === s.settings.carryFrom && (
+          <div className="pad small" style={{ color: "var(--warn)" }} data-testid="carry-manual-note">
+            Carry-overs into {y} start at 0 for everyone and are <b>not</b> worked out automatically: {editable
+              ? <>if someone should bring days (or a minus) from {y - 1} into {y}, enter it under “Adjust ±” with {y} selected. Each row shows how {y - 1} ended.</>
+              : <>an Editor enters any days (or minus) brought from {y - 1}.</>}
+            {" "}From {y + 1} on, whatever is left at the end of a year carries over by itself.
+          </div>
+        )}
         <div className="mlist">
           {sorted.map((m) => {
             const b = balance(d.cal, d.model, m, y);
@@ -148,13 +157,24 @@ export function Team() {
 function MemberControls({ m, y, linkedUid }: { m: Member; y: number; linkedUid: string | null }) {
   const [s, d] = useApp();
   const ent = entitlement(d.cal, m, y);
-  const carry = carryover(m, y);
+  const adj = carryover(m, y);
+  const automatic = y - 1 >= carryStart(d.cal, m);
+  const auto = automatic ? autoCarry(d.cal, d.model, m, y) : 0;
+  const archivedPrev = s.settings.archivedBefore != null && y - 1 < s.settings.archivedBefore;
+  const prevLeft = automatic ? auto : archivedPrev ? d.model.yearEnds.get(y - 1)?.[m.id] ?? null : balance(d.cal, d.model, m, y - 1).left;
+  // before carry-over starts, show how the previous year ended (if it was tracked) so an Editor can carry it by hand
+  const tracked = !!m.addedAt && yearOf(m.addedAt) <= y - 1;
+  const hint = automatic
+    ? `${auto >= 0 ? "+" : ""}${num(auto)} from ${y - 1} automatically`
+    : tracked && prevLeft != null ? `${y - 1} ended at ${num(prevLeft)}, not carried automatically` : `nothing carried from ${y - 1} automatically`;
   return (
     <>
       <NumberField label="Days" id={`ent-${m.id}`} value={ent} min={0} max={90} title={`Vacation days for ${y}`}
         onCommit={(v) => updateMember(m.id, { entitlements: { ...m.entitlements, [y]: v } }, "Entitlement updated")} />
-      <NumberField label="Carried" id={`carry-${m.id}`} value={carry} min={-30} max={60} title={`Days carried over into ${y}`}
-        onCommit={(v) => updateMember(m.id, { carryover: { ...m.carryover, [y]: v } }, "Carry-over updated")} />
+      <NumberField label="Adjust ±" id={`carry-${m.id}`} value={adj} min={-60} max={60}
+        title={`Days added to ${y} on top of what carries over automatically (${hint}). 0 = no adjustment.`}
+        onCommit={(v) => updateMember(m.id, { carryover: { ...m.carryover, [y]: v } }, "Adjustment saved")} />
+      <span className="tiny dim num" data-testid={`carry-hint-${m.id}`}>{hint}</span>
       <button className="btn sm ghost" type="button" onClick={() => void updateMember(m.id, { role: m.role === "manager" ? "member" : "manager" }, m.role === "manager" ? "No longer approves leave" : "Now marked as an approver")}>
         {m.role === "manager" ? "Remove approver" : "Make approver"}
       </button>

@@ -32,6 +32,8 @@ const FLAG_TEXT: Record<string, string> = {
   "changed-after-decision": "Changed after it was decided — shown as decided",
   "entry-removed": "Removed by its owner — kept from the approvers’ record",
   "withdrawal-unconfirmed": "Withdrawal awaiting an approver",
+  "over-limit": "Would go below the lowest balance allowed — needs an approver",
+  "charge-closed": "Booked ahead against a year that is already over — needs an approver",
 };
 export function Flags({ r }: { r: LeaveOrOvertime }) {
   if (!r.flags.length) return null;

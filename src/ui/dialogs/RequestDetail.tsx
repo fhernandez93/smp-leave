@@ -46,6 +46,7 @@ export function RequestDetail({ uid }: { uid: string }) {
       <table style={{ marginTop: 14 }}>
         <tbody>
           <tr><td className="muted" style={{ width: "42%" }}>Person</td><td>{nameOf(s, d, r.memberId)}</td></tr>
+          {r.chargeYear != null && <tr><td className="muted">Counts against</td><td className="num">{r.chargeYear} vacation days (booked ahead)</td></tr>}
           <tr><td className="muted">Requested</td><td className="num">{(r.createdAt ?? "").slice(0, 10) || "—"}</td></tr>
           {r.createdBy && r.createdBy !== r.memberId && <tr><td className="muted">Entered by</td><td>{nameOf(s, d, r.createdBy)}</td></tr>}
           {r.decision && !r.auto && r.decision.by && (
